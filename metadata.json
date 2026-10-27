@@ -1,0 +1,6 @@
+{
+  "name": "Passport Photo Studio - Pro Quality Biometric & Print Sheet Maker",
+  "description": "Professional in-browser passport photo maker with 300 DPI high-res canvas cropping, local AI background removal, custom biometric backdrops, and multi-photo print sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,170 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { PassportPreset, PaperSize, BgColorOption } from '../types.ts';
+
+export const PASSPORT_PRESETS: PassportPreset[] = [
+  {
+    id: 'standard-eu-asia',
+    name: '35 × 45 mm',
+    country: 'EU / UK / Schengen / India / Nepal / Asia',
+    widthMm: 35,
+    heightMm: 45,
+    description: 'Universal biometric standard used in European Union, Schengen, UK, India, Nepal, Australia, and New Zealand.',
+    recommendedBg: '#FFFFFF',
+    faceHeightRatioMin: 0.70,
+    faceHeightRatioMax: 0.80,
+  },
+  {
+    id: 'us-passport',
+    name: '2" × 2" (51 × 51 mm)',
+    country: 'United States / India OCI',
+    widthMm: 50.8,
+    heightMm: 50.8,
+    description: 'Official US State Department passport & visa spec, India OCI, and diversity lottery.',
+    recommendedBg: '#FFFFFF',
+    faceHeightRatioMin: 0.50,
+    faceHeightRatioMax: 0.69,
+  },
+  {
+    id: 'asia-id-30x40',
+    name: '30 × 40 mm',
+    country: 'China Visa / Japan ID / Resume',
+    widthMm: 30,
+    heightMm: 40,
+    description: 'Standard size for Chinese work permits, Japanese driving licenses, resumes, and university documents.',
+    recommendedBg: '#FFFFFF',
+    faceHeightRatioMin: 0.70,
+    faceHeightRatioMax: 0.75,
+  },
+  {
+    id: 'india-visa-35x35',
+    name: '35 × 35 mm',
+    country: 'India Visa / Specialty Formats',
+    widthMm: 35,
+    heightMm: 35,
+    description: 'Square format required for specific Indian visa categories and online portal submissions.',
+    recommendedBg: '#FFFFFF',
+    faceHeightRatioMin: 0.70,
+    faceHeightRatioMax: 0.80,
+  },
+  {
+    id: 'canada-passport-50x70',
+    name: '50 × 70 mm',
+    country: 'Canada Passport / Greece',
+    widthMm: 50,
+    heightMm: 70,
+    description: 'Official Canadian passport size requiring chin-to-crown measurement between 31mm and 36mm.',
+    recommendedBg: '#FFFFFF',
+    faceHeightRatioMin: 0.62,
+    faceHeightRatioMax: 0.72,
+  },
+  {
+    id: 'china-passport-33x48',
+    name: '33 × 48 mm',
+    country: 'China Passport Official',
+    widthMm: 33,
+    heightMm: 48,
+    description: 'Official biometric standard for Chinese Passports and National IDs.',
+    recommendedBg: '#FFFFFF',
+    faceHeightRatioMin: 0.70,
+    faceHeightRatioMax: 0.78,
+  },
+  {
+    id: 'custom',
+    name: 'Custom Dimensions',
+    country: 'User Defined (mm)',
+    widthMm: 35,
+    heightMm: 45,
+    description: 'Input any custom millimeter width and height with zero degradation.',
+    recommendedBg: '#FFFFFF',
+    faceHeightRatioMin: 0.70,
+    faceHeightRatioMax: 0.80,
+  },
+];
+
+export const PAPER_SIZES: PaperSize[] = [
+  {
+    id: '4x6-inch',
+    name: '4" × 6" (10 × 15 cm / 4R)',
+    widthMm: 101.6,
+    heightMm: 152.4,
+    widthInches: 4,
+    heightInches: 6,
+    standard: 'Most common photo print paper at photo labs, CVS, Walgreens, Costco & photo printers.',
+  },
+  {
+    id: 'a4',
+    name: 'A4 (210 × 297 mm)',
+    widthMm: 210,
+    heightMm: 297,
+    widthInches: 8.27,
+    heightInches: 11.69,
+    standard: 'International standard paper size for office and color laser printers.',
+  },
+  {
+    id: 'us-letter',
+    name: 'US Letter (8.5" × 11")',
+    widthMm: 215.9,
+    heightMm: 279.4,
+    widthInches: 8.5,
+    heightInches: 11.0,
+    standard: 'Standard North American paper size.',
+  },
+  {
+    id: '5x7-inch',
+    name: '5" × 7" (13 × 18 cm / 5R)',
+    widthMm: 127.0,
+    heightMm: 177.8,
+    widthInches: 5,
+    heightInches: 7,
+    standard: 'Larger standard photo sheet fitting up to 12-16 passport photos easily.',
+  },
+];
+
+export const PRESET_BACKGROUND_COLORS: BgColorOption[] = [
+  {
+    id: 'white',
+    name: 'Pure White',
+    hex: '#FFFFFF',
+    description: 'Required by US, Schengen, UK, India, and 95% of international embassies.',
+  },
+  {
+    id: 'off-white',
+    name: 'Off-White',
+    hex: '#F8FAFC',
+    description: 'Subtle light backdrop that keeps white shirts and hair separated without glare.',
+  },
+  {
+    id: 'light-blue',
+    name: 'Light Blue',
+    hex: '#BFDBFE',
+    description: 'Official background for Malaysia, Sri Lanka, Philippines, and certain Middle East visas.',
+  },
+  {
+    id: 'soft-gray',
+    name: 'Soft Gray',
+    hex: '#E2E8F0',
+    description: 'Accepted standard for French identity cards and German biometric cards.',
+  },
+  {
+    id: 'red',
+    name: 'Vibrant Red',
+    hex: '#DC2626',
+    description: 'Official for Indonesian ID cards, Singapore Permanent Resident cards, and marital certificates.',
+  },
+  {
+    id: 'navy',
+    name: 'Corporate Navy',
+    hex: '#1E293B',
+    description: 'Professional dark backdrop for corporate badges, press credentials, and LinkedIn.',
+  },
+  {
+    id: 'transparent',
+    name: 'Transparent (PNG)',
+    hex: 'transparent',
+    description: 'Cutout with transparent alpha channel for digital applications and custom design.',
+  },
+];
