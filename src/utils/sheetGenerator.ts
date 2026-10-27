@@ -125,7 +125,42 @@ export function calculateSheetLayout(
 }
 
 /**
- * Generates high-DPI (300 DPI) print sheet canvas (supports automatic grid or manual placement)
+ * Calculates all grid slots across the print sheet for drag, drop, and rearrange
+ */
+export function calculateGridSlots(
+  preset: PassportPreset,
+  paper: PaperSize,
+  config: SheetConfig
+): import('../types.ts').GridSlot[] {
+  const layout = calculateSheetLayout(preset, paper, config);
+  const slots: import('../types.ts').GridSlot[] = [];
+  const photoW = preset.widthMm;
+  const photoH = preset.heightMm;
+  const spacing = config.spacingMm;
+
+  let index = 0;
+  for (let r = 0; r < layout.rows; r++) {
+    for (let c = 0; c < layout.cols; c++) {
+      slots.push({
+        id: `slot-${r}-${c}-${index}`,
+        slotIndex: index,
+        row: r,
+        col: c,
+        xMm: Math.round((layout.startXmm + c * (photoW + spacing)) * 10) / 10,
+        yMm: Math.round((layout.startYmm + r * (photoH + spacing)) * 10) / 10,
+        widthMm: photoW,
+        heightMm: photoH,
+        hasPhoto: index < layout.actualCopies,
+        isRotated: false,
+      });
+      index++;
+    }
+  }
+  return slots;
+}
+
+/**
+ * Generates high-DPI (300 DPI) print sheet canvas (supports drag-and-drop grid slots or auto layout)
  */
 export function generatePrintSheetCanvas(
   photoCanvas: HTMLCanvasElement,
@@ -133,7 +168,7 @@ export function generatePrintSheetCanvas(
   paper: PaperSize,
   config: SheetConfig,
   dpi: number = DEFAULT_DPI,
-  manualPositions?: import('../types.ts').ManualPhotoPosition[]
+  slots?: import('../types.ts').GridSlot[]
 ): HTMLCanvasElement {
   const layout = calculateSheetLayout(preset, paper, config);
 
@@ -151,16 +186,18 @@ export function generatePrintSheetCanvas(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  if (manualPositions && manualPositions.length > 0) {
-    // Manual placement mode
-    manualPositions.forEach((pos) => {
-      const x = Math.round(mmToPixels(pos.xMm, dpi));
-      const y = Math.round(mmToPixels(pos.yMm, dpi));
-      const w = Math.round(mmToPixels(pos.widthMm, dpi));
-      const h = Math.round(mmToPixels(pos.heightMm, dpi));
+  if (slots && slots.length > 0) {
+    // Render from custom rearranged grid slots
+    slots.forEach((slot) => {
+      if (!slot.hasPhoto) return;
+
+      const x = Math.round(mmToPixels(slot.xMm, dpi));
+      const y = Math.round(mmToPixels(slot.yMm, dpi));
+      const w = Math.round(mmToPixels(slot.widthMm, dpi));
+      const h = Math.round(mmToPixels(slot.heightMm, dpi));
 
       ctx.save();
-      if (pos.isRotated) {
+      if (slot.isRotated) {
         ctx.translate(x + w / 2, y + h / 2);
         ctx.rotate((90 * Math.PI) / 180);
         ctx.drawImage(photoCanvas, -h / 2, -w / 2, h, w);
@@ -221,8 +258,8 @@ export function generatePrintSheetCanvas(
   ctx.fillStyle = '#A1A1AA';
   ctx.font = `${Math.round(dpi / 35)}px sans-serif`;
   ctx.textAlign = 'left';
-  const copiesCount = manualPositions && manualPositions.length > 0 ? manualPositions.length : layout.actualCopies;
-  const metaText = `${preset.name} (${preset.widthMm}x${preset.heightMm}mm) · ${copiesCount} Photos · 300 DPI · pic.amitjoshi.info.np`;
+  const activeCount = slots ? slots.filter((s) => s.hasPhoto).length : layout.actualCopies;
+  const metaText = `${preset.name} (${preset.widthMm}x${preset.heightMm}mm) · ${activeCount} Photos · 300 DPI · pic.amitjoshi.info.np`;
   ctx.fillText(metaText, mmToPixels(6, dpi), sheetCanvas.height - Math.round(mmToPixels(4, dpi)));
 
   return sheetCanvas;

@@ -52,12 +52,17 @@ export interface BgColorOption {
   description: string;
 }
 
-export interface ManualPhotoPosition {
+export interface GridSlot {
   id: string;
+  slotIndex: number;
+  row: number;
+  col: number;
   xMm: number;
   yMm: number;
   widthMm: number;
   heightMm: number;
+  hasPhoto: boolean;
   isRotated?: boolean;
 }
+
 
