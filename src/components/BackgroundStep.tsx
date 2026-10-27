@@ -80,10 +80,13 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
     }
   }, [croppedCanvas, cutoutCanvas, selectedBgColor, adjustments]);
 
+  const [errorNotice, setErrorNotice] = useState<string | null>(null);
+
   // AI Background Removal using WebAssembly
   const handleRemoveBackgroundAI = async () => {
     if (!croppedCanvas) return;
     setIsRemovingBg(true);
+    setErrorNotice(null);
     setAiProgress({ phase: 'Initializing WebAssembly AI model...', percent: 10 });
 
     try {
@@ -111,7 +114,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
       img.src = URL.createObjectURL(transparentBlob);
     } catch (err) {
       console.error(err);
-      alert('AI Background removal encountered an issue. You can use the Instant Wall Key button below as a zero-latency alternative.');
+      setErrorNotice('AI processing encountered an issue. You can use the Instant Wall Keying tool below, or contact Support at admin@amitjoshi.info.np or WhatsApp at +977 9746241860.');
       setIsRemovingBg(false);
       setAiProgress(null);
     }
@@ -244,6 +247,22 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
               WebAssembly
             </span>
           </div>
+
+          {errorNotice && (
+            <div className="p-3 bg-rose-950/40 border border-rose-800/60 rounded-lg text-xs text-rose-200 space-y-1.5">
+              <div className="font-semibold text-rose-300">Processing Error</div>
+              <p className="text-[11px] leading-relaxed text-zinc-300">
+                If any error occurs or AI processing fails, contact Support at{' '}
+                <a href="mailto:admin@amitjoshi.info.np" className="text-indigo-400 font-semibold underline">
+                  admin@amitjoshi.info.np
+                </a>{' '}
+                or WhatsApp at{' '}
+                <a href="https://wa.me/9779746241860" target="_blank" rel="noreferrer" className="text-emerald-400 font-semibold underline">
+                  +977 9746241860
+                </a>.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2.5">
             <button

@@ -21,7 +21,7 @@ export async function removeBackgroundWithAI(
 ): Promise<Blob> {
   try {
     const blob = await removeBackground(imageSource, {
-      publicPath: 'https://staticimgly.com/@imgly/background-removal-data@1.5.8/dist/',
+      publicPath: 'https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/',
       progress: (key: string, current: number, total: number) => {
         const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 50;
         let phase = 'Processing portrait AI...';
@@ -43,12 +43,12 @@ export async function removeBackgroundWithAI(
 
     return blob;
   } catch (error) {
-    console.warn('Primary @imgly model failed or interrupted, falling back to CDN ESM:', error);
+    console.warn('Primary @imgly model failed or interrupted, falling back to secondary CDN:', error);
     // Secondary fallback directly via dynamic ESM import
     try {
-      const imgly = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm' as string);
+      const imgly = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm' as string);
       const fallbackBlob = await imgly.removeBackground(imageSource, {
-        publicPath: 'https://staticimgly.com/@imgly/background-removal-data@1.5.8/dist/',
+        publicPath: 'https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/',
         progress: (key: string, current: number, total: number) => {
           const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 50;
           if (onProgress) {

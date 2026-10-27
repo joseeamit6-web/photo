@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Passport Photo Studio | pic.amitjoshi.info.np</title>
-  <meta name="description" content="Production-ready in-browser biometric passport photo maker with 300 DPI high-res canvas crop, AI background removal, and multi-photo print sheets.">
+  <meta name="description" content="Professional biometric passport photo studio with 300 DPI high-res canvas cropping, AI background removal, and multi-photo print sheets.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -42,7 +42,22 @@
     }
     .brand { font-size: 1.15rem; font-weight: 700; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
     .badge-domain { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
-    main { max-width: 1320px; width: 100%; margin: 0 auto; padding: 1.5rem; flex: 1; }
+    main { max-width: 1280px; width: 100%; margin: 0 auto; padding: 1.25rem; flex: 1; }
+    .support-banner {
+      background: rgba(24, 24, 27, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .support-banner a { color: #818cf8; text-decoration: none; font-weight: 600; }
+    .support-banner a.wa { color: #34d399; }
     .studio-grid { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start; }
     @media (max-width: 960px) { .studio-grid { grid-template-columns: 1fr; } }
     .canvas-panel {
@@ -125,7 +140,6 @@
       color: var(--text-main);
     }
     .action-btn.secondary:hover { background: #3f3f46; }
-    .btn-row { display: flex; gap: 0.5rem; }
     .dropzone {
       border: 2px dashed var(--border);
       border-radius: 8px;
@@ -142,7 +156,7 @@
       inset: 0;
       background: rgba(0,0,0,0.85);
       z-index: 999;
-      padding: 2rem;
+      padding: 1.5rem;
       overflow-y: auto;
     }
     .sheet-content {
@@ -153,7 +167,6 @@
       border-radius: 12px;
       padding: 1.5rem;
     }
-    /* Biometric Guide */
     .biometric-guide {
       pointer-events: none;
       position: absolute;
@@ -179,15 +192,58 @@
     }
     .biometric-line.eyes { top: 44%; }
     .biometric-line.chin { bottom: 12%; }
-    /* Print Rules */
+    #ad-space {
+      width: 100%;
+      margin: 2rem 0 1rem 0;
+      min-height: 90px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: #09090b;
+    }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: #fff; }
+
+    /* Strict Top-Aligned Print Styling */
     @media print {
       body { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
-      header, .controls-panel, .canvas-panel, .sheet-content > :not(#print-sheet-wrapper), .no-print { display: none !important; }
+      header, .controls-panel, .canvas-panel, .support-banner, #ad-space, footer, .sheet-content > :not(#print-sheet-wrapper), .no-print { display: none !important; }
       .sheet-preview-modal { display: block !important; position: static !important; background: transparent !important; padding: 0 !important; }
       .sheet-content { border: none !important; padding: 0 !important; margin: 0 !important; }
-      #print-sheet-wrapper { display: flex !important; align-items: center !important; justify-content: center !important; }
-      #print-sheet-canvas { max-width: 100% !important; height: auto !important; }
-      @page { margin: 0; size: auto; }
+      #print-sheet-wrapper {
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 5mm 0 0 0 !important;
+        background: #fff !important;
+      }
+      #print-sheet-canvas {
+        display: block !important;
+        max-width: 100% !important;
+        height: auto !important;
+        margin: 0 auto !important;
+      }
+      @page { margin: 0mm; size: auto; }
     }
   </style>
 </head>
@@ -201,6 +257,13 @@
   </header>
 
   <main>
+    <div class="support-banner no-print">
+      <span>If any error occurs or AI processing fails, contact Support at <a href="mailto:admin@amitjoshi.info.np">admin@amitjoshi.info.np</a> or WhatsApp at <a href="https://wa.me/9779746241860" target="_blank" class="wa">+977 9746241860</a></span>
+      <div>
+        <a href="https://wa.me/9779746241860" target="_blank" style="margin-left: 0.5rem; background: #064e3b; color: #6ee7b7; padding: 0.25rem 0.6rem; border-radius: 4px; text-decoration: none;">WhatsApp Help</a>
+      </div>
+    </div>
+
     <div class="studio-grid">
       <!-- Left: Image Viewport -->
       <div class="canvas-panel">
@@ -265,7 +328,7 @@
         <div>
           <div class="section-title" style="margin-bottom: 0.5rem;">3. Backdrop Color</div>
           <div class="color-row">
-            <div class="color-swatch active" style="background: #ffffff;" data-color="#ffffff" title="White (Global)"></div>
+            <div class="color-swatch active" style="background: #ffffff;" data-color="#ffffff" title="White"></div>
             <div class="color-swatch" style="background: #f8fafc;" data-color="#f8fafc" title="Off-White"></div>
             <div class="color-swatch" style="background: #bfdbfe;" data-color="#bfdbfe" title="Light Blue"></div>
             <div class="color-swatch" style="background: #e2e8f0;" data-color="#e2e8f0" title="Soft Gray"></div>
@@ -279,10 +342,15 @@
             Download Single Photo (300 DPI)
           </button>
           <button class="action-btn secondary" id="btn-open-sheet">
-            🖨️ Generate Print Sheet (4×6 / A4)
+            🖨️ Generate Print Sheet (Top-Aligned)
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Google Ad Container Slot -->
+    <div id="ad-space" class="no-print">
+      Google AdSense Responsive Banner Placement Area
     </div>
   </main>
 
@@ -292,7 +360,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;" class="no-print">
         <div>
           <h2 style="font-size: 1.25rem; font-weight: 700;">Print Sheet Generator</h2>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">Calibrated at 300 DPI with scissor cut lines</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Calibrated at 300 DPI · Top-aligned grid with scissor cut marks</p>
         </div>
         <button class="action-btn secondary" id="btn-close-sheet" style="width: auto; padding: 0.4rem 0.8rem;">✕ Close</button>
       </div>
@@ -322,13 +390,18 @@
         <canvas id="print-sheet-canvas" style="max-width: 100%; height: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5);"></canvas>
       </div>
 
-      <div class="btn-row no-print" style="margin-top: 1rem;">
+      <div style="display: flex; gap: 0.5rem; margin-top: 1rem;" class="no-print">
         <button class="action-btn" id="btn-print-sheet">Print Sheet (Ctrl+P)</button>
         <button class="action-btn secondary" id="btn-download-sheet-jpg">Download 300 DPI JPEG</button>
         <button class="action-btn secondary" id="btn-download-sheet-pdf">Download PDF</button>
       </div>
     </div>
   </div>
+
+  <footer class="no-print">
+    <div>© 2026 Passport Photo Studio · pic.amitjoshi.info.np</div>
+    <div>Support: <a href="mailto:admin@amitjoshi.info.np">admin@amitjoshi.info.np</a> · WhatsApp: <a href="https://wa.me/9779746241860" target="_blank" style="color: #34d399;">+977 9746241860</a></div>
+  </footer>
 
   <script type="module">
     let cropper = null;
@@ -350,9 +423,7 @@
     dropzone.addEventListener('drop', (e) => {
       e.preventDefault();
       dropzone.style.borderColor = 'var(--border)';
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        loadFile(e.dataTransfer.files[0]);
-      }
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
     });
 
     fileInput.addEventListener('change', (e) => {
@@ -366,7 +437,7 @@
         img.onload = () => {
           originalImage = img;
           initCropper(evt.target.result);
-          document.getElementById('image-meta').textContent = `Loaded: ${img.naturalWidth} × ${img.naturalHeight}px (Full Resolution)`;
+          document.getElementById('image-meta').textContent = `Loaded: ${img.naturalWidth} × ${img.naturalHeight}px`;
         };
         img.src = evt.target.result;
       };
@@ -389,7 +460,6 @@
       });
     }
 
-    // Presets
     document.querySelectorAll('.btn-preset').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
@@ -400,7 +470,6 @@
       });
     });
 
-    // Background color
     document.querySelectorAll('.color-swatch').forEach(swatch => {
       swatch.addEventListener('click', () => {
         document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
@@ -413,30 +482,27 @@
       currentBgColor = e.target.value;
     });
 
-    // Rotate
     document.getElementById('btn-rotate-left').addEventListener('click', () => {
       if (cropper) cropper.rotate(-90);
     });
 
-    // Toggle guide
     document.getElementById('btn-toggle-guide').addEventListener('click', () => {
       isGuideVisible = !isGuideVisible;
       biometricGuide.style.display = isGuideVisible ? 'flex' : 'none';
       document.getElementById('btn-toggle-guide').textContent = isGuideVisible ? 'Guides: ON' : 'Guides: OFF';
     });
 
-    // AI Background removal via dynamic ESM import
     document.getElementById('btn-remove-bg').addEventListener('click', async () => {
       if (!cropper) return alert('Please upload a photo first.');
       const statusEl = document.getElementById('ai-status');
-      statusEl.textContent = 'Loading WebAssembly AI model... (please wait)';
+      statusEl.textContent = 'Loading WebAssembly AI model...';
 
       try {
-        const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm');
+        const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
         const croppedCanvas = getHighResCroppedCanvas();
         croppedCanvas.toBlob(async (blob) => {
           const removedBlob = await removeBackground(blob, {
-            publicPath: 'https://staticimgly.com/@imgly/background-removal-data@1.5.8/dist/',
+            publicPath: 'https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/',
             progress: (key, cur, tot) => {
               const p = tot > 0 ? Math.round((cur / tot) * 100) : 50;
               statusEl.textContent = `AI Processing: ${p}%...`;
@@ -455,7 +521,7 @@
         });
       } catch (err) {
         console.error(err);
-        statusEl.textContent = 'Error running local AI background removal.';
+        statusEl.innerHTML = 'Error running local AI. Contact <a href="mailto:admin@amitjoshi.info.np" style="color:#818cf8;">admin@amitjoshi.info.np</a> or WhatsApp <a href="https://wa.me/9779746241860" style="color:#34d399;">+977 9746241860</a>';
       }
     });
 
@@ -490,7 +556,6 @@
       return canvas;
     }
 
-    // Download single photo
     document.getElementById('btn-download-single').addEventListener('click', () => {
       if (!cropper) return alert('Please upload a photo first.');
       const canvas = renderFinalPhotoCanvas();
@@ -502,7 +567,6 @@
       }, 'image/jpeg', 1.0);
     });
 
-    // Sheet Modal & Rendering
     const sheetModal = document.getElementById('sheet-modal');
     document.getElementById('btn-open-sheet').addEventListener('click', () => {
       if (!cropper) return alert('Please upload a photo first.');
@@ -540,7 +604,7 @@
       const photoW = Math.round((selectedWidthMm / 25.4) * dpi);
       const photoH = Math.round((selectedHeightMm / 25.4) * dpi);
       const spacing = Math.round((3 / 25.4) * dpi);
-      const margin = Math.round((8 / 25.4) * dpi);
+      const margin = Math.round((6 / 25.4) * dpi);
 
       const cols = Math.floor((sheetW - 2 * margin + spacing) / (photoW + spacing));
       const rows = Math.floor((sheetH - 2 * margin + spacing) / (photoH + spacing));
@@ -551,9 +615,9 @@
       const actualCols = Math.min(cols, totalCopies);
       const actualRows = Math.ceil(totalCopies / actualCols);
       const gridW = actualCols * photoW + (actualCols - 1) * spacing;
-      const gridH = actualRows * photoH + (actualRows - 1) * spacing;
       const startX = Math.round((sheetW - gridW) / 2);
-      const startY = Math.round((sheetH - gridH) / 2);
+      // Strictly TOP-ALIGNED (starts at margin 6mm from top, down)
+      const startY = margin;
 
       let drawn = 0;
       for (let r = 0; r < actualRows; r++) {

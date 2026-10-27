@@ -103,11 +103,13 @@ export function calculateSheetLayout(
     activeCols = actualCopies;
   }
 
+  // Grid dimensions
   const gridWidthMm = activeCols * photoW + (activeCols - 1) * spacing;
   const gridHeightMm = activeRows * photoH + (activeRows - 1) * spacing;
 
+  // Horizontally centered within paper, and strictly TOP-ALIGNED with margin (starts from top down)
   const startXmm = Math.max(margin, (chosen.pWidth - gridWidthMm) / 2);
-  const startYmm = Math.max(margin, (chosen.pHeight - gridHeightMm) / 2);
+  const startYmm = Math.max(5, margin); // strictly top of the page (5mm or margin), not half/middle
 
   return {
     cols: activeCols,
@@ -123,14 +125,15 @@ export function calculateSheetLayout(
 }
 
 /**
- * Generates high-DPI (300 DPI) print sheet canvas
+ * Generates high-DPI (300 DPI) print sheet canvas (supports automatic grid or manual placement)
  */
 export function generatePrintSheetCanvas(
   photoCanvas: HTMLCanvasElement,
   preset: PassportPreset,
   paper: PaperSize,
   config: SheetConfig,
-  dpi: number = DEFAULT_DPI
+  dpi: number = DEFAULT_DPI,
+  manualPositions?: import('../types.ts').ManualPhotoPosition[]
 ): HTMLCanvasElement {
   const layout = calculateSheetLayout(preset, paper, config);
 
@@ -148,37 +151,69 @@ export function generatePrintSheetCanvas(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  const photoWPx = mmToPixels(preset.widthMm, dpi);
-  const photoHPx = mmToPixels(preset.heightMm, dpi);
-  const spacingPx = mmToPixels(config.spacingMm, dpi);
-  const startXPx = mmToPixels(layout.startXmm, dpi);
-  const startYPx = mmToPixels(layout.startYmm, dpi);
+  if (manualPositions && manualPositions.length > 0) {
+    // Manual placement mode
+    manualPositions.forEach((pos) => {
+      const x = Math.round(mmToPixels(pos.xMm, dpi));
+      const y = Math.round(mmToPixels(pos.yMm, dpi));
+      const w = Math.round(mmToPixels(pos.widthMm, dpi));
+      const h = Math.round(mmToPixels(pos.heightMm, dpi));
 
-  let drawnCount = 0;
+      ctx.save();
+      if (pos.isRotated) {
+        ctx.translate(x + w / 2, y + h / 2);
+        ctx.rotate((90 * Math.PI) / 180);
+        ctx.drawImage(photoCanvas, -h / 2, -w / 2, h, w);
+        ctx.restore();
+      } else {
+        ctx.drawImage(photoCanvas, 0, 0, photoCanvas.width, photoCanvas.height, x, y, w, h);
+        ctx.restore();
+      }
 
-  for (let r = 0; r < layout.rows; r++) {
-    for (let c = 0; c < layout.cols; c++) {
-      if (drawnCount >= layout.actualCopies) break;
-
-      const x = Math.round(startXPx + c * (photoWPx + spacingPx));
-      const y = Math.round(startYPx + r * (photoHPx + spacingPx));
-
-      // Draw photo
-      ctx.drawImage(photoCanvas, 0, 0, photoCanvas.width, photoCanvas.height, x, y, photoWPx, photoHPx);
-
-      // Draw optional hairline border
       if (config.showBorder) {
         ctx.strokeStyle = config.borderColor || '#E4E4E7';
         ctx.lineWidth = Math.max(1, Math.round(dpi / 300));
-        ctx.strokeRect(x, y, photoWPx, photoHPx);
+        ctx.strokeRect(x, y, w, h);
       }
 
-      // Draw scissor / cutting guides
       if (config.showCutGuidelines) {
-        drawCutMarks(ctx, x, y, photoWPx, photoHPx, dpi);
+        drawCutMarks(ctx, x, y, w, h, dpi);
       }
+    });
+  } else {
+    // Automatic Grid Mode
+    const photoWPx = mmToPixels(preset.widthMm, dpi);
+    const photoHPx = mmToPixels(preset.heightMm, dpi);
+    const spacingPx = mmToPixels(config.spacingMm, dpi);
+    const startXPx = mmToPixels(layout.startXmm, dpi);
+    const startYPx = mmToPixels(layout.startYmm, dpi);
 
-      drawnCount++;
+    let drawnCount = 0;
+
+    for (let r = 0; r < layout.rows; r++) {
+      for (let c = 0; c < layout.cols; c++) {
+        if (drawnCount >= layout.actualCopies) break;
+
+        const x = Math.round(startXPx + c * (photoWPx + spacingPx));
+        const y = Math.round(startYPx + r * (photoHPx + spacingPx));
+
+        // Draw photo
+        ctx.drawImage(photoCanvas, 0, 0, photoCanvas.width, photoCanvas.height, x, y, photoWPx, photoHPx);
+
+        // Draw optional hairline border
+        if (config.showBorder) {
+          ctx.strokeStyle = config.borderColor || '#E4E4E7';
+          ctx.lineWidth = Math.max(1, Math.round(dpi / 300));
+          ctx.strokeRect(x, y, photoWPx, photoHPx);
+        }
+
+        // Draw scissor / cutting guides
+        if (config.showCutGuidelines) {
+          drawCutMarks(ctx, x, y, photoWPx, photoHPx, dpi);
+        }
+
+        drawnCount++;
+      }
     }
   }
 
@@ -186,8 +221,9 @@ export function generatePrintSheetCanvas(
   ctx.fillStyle = '#A1A1AA';
   ctx.font = `${Math.round(dpi / 35)}px sans-serif`;
   ctx.textAlign = 'left';
-  const metaText = `${preset.name} (${preset.widthMm}x${preset.heightMm}mm) · ${layout.actualCopies} Photos · 300 DPI · pic.amitjoshi.info.np`;
-  ctx.fillText(metaText, startXPx, sheetCanvas.height - Math.round(startYPx / 2));
+  const copiesCount = manualPositions && manualPositions.length > 0 ? manualPositions.length : layout.actualCopies;
+  const metaText = `${preset.name} (${preset.widthMm}x${preset.heightMm}mm) · ${copiesCount} Photos · 300 DPI · pic.amitjoshi.info.np`;
+  ctx.fillText(metaText, mmToPixels(6, dpi), sheetCanvas.height - Math.round(mmToPixels(4, dpi)));
 
   return sheetCanvas;
 }

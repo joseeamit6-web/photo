@@ -51,3 +51,13 @@ export interface BgColorOption {
   hex: string;
   description: string;
 }
+
+export interface ManualPhotoPosition {
+  id: string;
+  xMm: number;
+  yMm: number;
+  widthMm: number;
+  heightMm: number;
+  isRotated?: boolean;
+}
+
