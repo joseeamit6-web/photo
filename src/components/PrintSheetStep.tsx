@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Printer,
   Download,
   FileText,
-  Scissors,
   ArrowLeft,
   Maximize,
   Check,
@@ -19,9 +18,8 @@ import {
   Minus,
   Trash2,
   Move,
-  Sparkles,
-  RefreshCw,
-  LayoutGrid
+  LayoutGrid,
+  Image as ImageIcon
 } from 'lucide-react';
 import { PaperSize, PassportPreset, SheetConfig, GridSlot } from '../types.ts';
 import { PAPER_SIZES } from '../constants/presets.ts';
@@ -45,9 +43,12 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
   selectedPreset,
   onBackToBackground,
 }) => {
-  const [selectedPaper, setSelectedPaper] = useState<PaperSize>(PAPER_SIZES[0]); // 4x6 by default
+  // Default to A4 paper as requested
+  const defaultA4 = PAPER_SIZES.find((p) => p.id === 'a4') || PAPER_SIZES[0];
+  const [selectedPaper, setSelectedPaper] = useState<PaperSize>(defaultA4);
+
   const [sheetConfig, setSheetConfig] = useState<SheetConfig>({
-    paperSizeId: PAPER_SIZES[0].id,
+    paperSizeId: defaultA4.id,
     copyCount: 8,
     spacingMm: 3,
     marginMm: 6,
@@ -66,7 +67,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
   const sheetCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Initialize or re-calculate grid slots when paper, preset, or layout configuration changes
+  // Recalculate layout and slots when paper, preset, or sheetConfig changes
   useEffect(() => {
     if (!finalPhotoCanvas) return;
 
@@ -77,7 +78,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
     setGridSlots(slots);
   }, [finalPhotoCanvas, selectedPreset, selectedPaper, sheetConfig]);
 
-  // Regenerate high-res 300 DPI canvas whenever grid slots change
+  // Regenerate high-resolution 300 DPI canvas whenever grid slots change
   useEffect(() => {
     if (!finalPhotoCanvas) return;
 
@@ -94,7 +95,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
     setSheetDataUrl(canvas.toDataURL('image/jpeg', 0.95));
   }, [finalPhotoCanvas, selectedPreset, selectedPaper, sheetConfig, gridSlots]);
 
-  // Drag and Drop Handlers
+  // Drag and Drop Handlers for rearranging photos
   const handleDragStart = (e: React.DragEvent, slotId: string) => {
     const slot = gridSlots.find((s) => s.id === slotId);
     if (!slot || !slot.hasPhoto) {
@@ -134,7 +135,6 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
       const targetSlot = prev.find((s) => s.id === targetSlotId);
       if (!sourceSlot || !targetSlot) return prev;
 
-      // Swap the photo presence and rotation state between source and target slots
       return prev.map((s) => {
         if (s.id === targetSlotId) {
           return {
@@ -157,7 +157,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
     setDraggedSlotId(null);
   };
 
-  // Toggle single slot state on click (if empty, fill it; if filled, toggle select)
+  // Toggle single slot state on click
   const handleToggleSlotPhoto = (slotId: string) => {
     setGridSlots((prev) =>
       prev.map((s) => (s.id === slotId ? { ...s, hasPhoto: !s.hasPhoto } : s))
@@ -172,9 +172,30 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
     );
   };
 
-  // Fill all slots
+  // User sets exact custom number of photos
+  const handleSetCustomCount = (newCount: number) => {
+    const total = gridSlots.length;
+    const clamped = Math.max(0, Math.min(newCount, total));
+    setSheetConfig((prev) => ({ ...prev, copyCount: clamped }));
+    setGridSlots((prev) =>
+      prev.map((s, idx) => ({
+        ...s,
+        hasPhoto: idx < clamped,
+        isRotated: false,
+      }))
+    );
+  };
+
+  // Fill all slots on the page
   const handleFillAllSlots = () => {
+    setSheetConfig((prev) => ({ ...prev, copyCount: gridSlots.length }));
     setGridSlots((prev) => prev.map((s) => ({ ...s, hasPhoto: true })));
+  };
+
+  // Clear all slots
+  const handleClearAllSlots = () => {
+    setSheetConfig((prev) => ({ ...prev, copyCount: 0 }));
+    setGridSlots((prev) => prev.map((s) => ({ ...s, hasPhoto: false })));
   };
 
   // Compact active photos towards the top-left slots without gaps
@@ -187,25 +208,6 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
         isRotated: false,
       }));
     });
-  };
-
-  // Clear all slots
-  const handleClearAllSlots = () => {
-    setGridSlots((prev) => prev.map((s) => ({ ...s, hasPhoto: false })));
-  };
-
-  // Set custom number of photos directly
-  const handleSetCustomCount = (newCount: number) => {
-    const total = gridSlots.length || 1;
-    const clamped = Math.max(0, Math.min(newCount, total));
-    setSheetConfig((prev) => ({ ...prev, copyCount: clamped }));
-    setGridSlots((prev) =>
-      prev.map((s, idx) => ({
-        ...s,
-        hasPhoto: idx < clamped,
-        isRotated: false,
-      }))
-    );
   };
 
   // Reset to auto layout
@@ -234,7 +236,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
   const activePhotosCount = gridSlots.filter((s) => s.hasPhoto).length;
 
   return (
-    <div>
+    <div className="w-full max-w-full overflow-hidden">
       {/* Hidden container dedicated strictly for window.print() */}
       <div id="print-sheet-wrapper" className="hidden">
         {sheetDataUrl && (
@@ -246,44 +248,55 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
         )}
       </div>
 
-      {/* Main Studio View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start no-print">
+      {/* Main Studio View with responsive layout locking */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start no-print max-w-full">
         {/* Left 7 Cols: Interactive Drag-and-Drop Print Sheet Preview */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 shadow-xl flex flex-col items-center">
+        <div className="w-full max-w-full lg:col-span-7 space-y-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 sm:p-5 shadow-xl flex flex-col items-center max-w-full overflow-hidden">
             <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-zinc-800">
               <div>
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                   <span>Interactive Print Sheet</span>
                   <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/70 border border-indigo-800/60 px-2 py-0.5 rounded flex items-center gap-1">
                     <Move className="w-3 h-3" />
-                    <span>Drag & Drop Enabled</span>
+                    <span className="hidden xs:inline">Drag & Drop</span>
                   </span>
                 </h3>
                 <p className="text-[11px] font-mono text-zinc-400 mt-0.5">
-                  {selectedPaper.name} · {activePhotosCount} Photos Placed · 300 DPI
+                  {selectedPaper.name} · <span className="text-emerald-400 font-semibold">{activePhotosCount} Photos</span> · 300 DPI
                 </p>
               </div>
 
               {/* Quick Grid Actions */}
-              <div className="flex items-center gap-1.5 text-xs">
+              <div className="flex items-center gap-1.5 text-xs flex-wrap">
                 <button
+                  type="button"
                   onClick={handleFillAllSlots}
-                  className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-[11px] font-medium transition-colors"
+                  className="px-2.5 py-1 bg-indigo-950/60 hover:bg-indigo-900/60 border border-indigo-800/60 text-indigo-300 rounded text-[11px] font-medium transition-colors cursor-pointer"
                   title="Fill all printable slots"
                 >
-                  Fill All ({gridSlots.length})
+                  Fill Page ({gridSlots.length})
                 </button>
                 <button
+                  type="button"
                   onClick={handleCompactToTop}
-                  className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-[11px] font-medium transition-colors"
-                  title="Compact photos to top without gaps"
+                  className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded text-[11px] font-medium transition-colors cursor-pointer"
+                  title="Compact photos to top-left without gaps"
                 >
                   Compact
                 </button>
                 <button
+                  type="button"
+                  onClick={handleClearAllSlots}
+                  className="px-2 py-1 text-rose-400 hover:text-rose-300 rounded text-[11px] transition-colors cursor-pointer"
+                  title="Clear all photos from sheet"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
                   onClick={handleResetToAuto}
-                  className="px-2 py-1 text-zinc-400 hover:text-white rounded text-[11px] transition-colors"
+                  className="px-2 py-1 text-zinc-400 hover:text-white rounded text-[11px] transition-colors cursor-pointer"
                   title="Reset to default copies"
                 >
                   Reset
@@ -292,25 +305,30 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
             </div>
 
             {/* Instruction Banner */}
-            <div className="w-full mb-3 p-2 bg-indigo-950/20 border border-indigo-800/40 rounded-lg text-xs text-indigo-300 flex items-center justify-between">
+            <div className="w-full mb-3 p-2.5 bg-indigo-950/30 border border-indigo-800/40 rounded-lg text-xs text-indigo-300 flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5">
                 <LayoutGrid className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                <span>Drag photos to rearrange slots or click empty slots to toggle placement.</span>
+                <span className="text-[11px] sm:text-xs">
+                  Click any slot to add/remove photo, or drag to reorder.
+                </span>
               </span>
-              <span className="text-[10px] font-mono text-zinc-400 hidden sm:inline">
-                Top-to-Bottom Flow
+              <span className="text-[10px] font-mono text-zinc-400 hidden sm:inline shrink-0">
+                A4 Millimeter Precision
               </span>
             </div>
 
-            {/* Paper Sheet Preview Container */}
-            <div className="w-full p-2 sm:p-4 bg-zinc-950 rounded-lg flex items-center justify-center min-h-[440px] overflow-hidden border border-zinc-800/80">
+            {/* Paper Sheet Preview Container (Strictly locked to fit any viewport down to 320px) */}
+            <div className="w-full p-2 sm:p-4 bg-zinc-950 rounded-lg flex items-center justify-center min-h-[360px] sm:min-h-[440px] overflow-hidden border border-zinc-800/80">
               {layoutInfo ? (
                 <div
                   ref={previewContainerRef}
-                  className="relative shadow-2xl rounded border border-zinc-700/60 overflow-hidden bg-white select-none transition-all"
+                  className="relative shadow-2xl rounded border border-zinc-700/60 overflow-hidden bg-white select-none transition-all mx-auto"
                   style={{
                     width: '100%',
-                    maxWidth: layoutInfo.paperWidthMm > layoutInfo.paperHeightMm ? '540px' : '390px',
+                    maxWidth:
+                      layoutInfo.paperWidthMm > layoutInfo.paperHeightMm
+                        ? 'min(540px, 100%)'
+                        : 'min(390px, 100%)',
                     aspectRatio: `${layoutInfo.paperWidthMm} / ${layoutInfo.paperHeightMm}`,
                   }}
                 >
@@ -378,11 +396,11 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                             </span>
 
                             {/* Quick Slot Actions overlay */}
-                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur-sm rounded p-0.5 flex items-center gap-0.5">
+                            <div className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur-sm rounded p-0.5 flex items-center gap-0.5">
                               <button
                                 type="button"
                                 onClick={(e) => handleRotateSlot(slot.id, e)}
-                                className="p-0.5 hover:bg-zinc-700 rounded text-zinc-200"
+                                className="p-0.5 hover:bg-zinc-700 rounded text-zinc-200 cursor-pointer"
                                 title="Rotate 90°"
                               >
                                 <RotateCw className="w-2.5 h-2.5" />
@@ -393,7 +411,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                                   e.stopPropagation();
                                   handleToggleSlotPhoto(slot.id);
                                 }}
-                                className="p-0.5 hover:bg-rose-900 rounded text-rose-300"
+                                className="p-0.5 hover:bg-rose-900 rounded text-rose-300 cursor-pointer"
                                 title="Remove photo"
                               >
                                 <Trash2 className="w-2.5 h-2.5" />
@@ -410,7 +428,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                             }`}
                           >
                             <Plus className="w-3.5 h-3.5 text-zinc-400 group-hover:text-indigo-600 transition-colors" />
-                            <span className="text-[7px] font-mono text-zinc-400 group-hover:text-indigo-600 mt-0.5">
+                            <span className="text-[7px] font-mono text-zinc-400 group-hover:text-indigo-600 mt-0.2">
                               #{slot.slotIndex + 1}
                             </span>
                           </div>
@@ -427,8 +445,9 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
             {/* Print Sheet Action Buttons */}
             <div className="w-full mt-4 pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3">
               <button
+                type="button"
                 onClick={onBackToBackground}
-                className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back to Retouch</span>
@@ -436,25 +455,38 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
+                  type="button"
                   onClick={handlePrint}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md shadow-indigo-600/30 flex items-center gap-2 transition-colors"
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md shadow-indigo-600/30 flex items-center gap-2 transition-all cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   <span>Print Sheet (Ctrl+P)</span>
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => handleDownloadSheet('jpeg')}
-                  className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                   title="Download 300 DPI JPEG Sheet"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>300 DPI JPEG</span>
+                  <span>JPEG</span>
                 </button>
 
                 <button
+                  type="button"
+                  onClick={() => handleDownloadSheet('png')}
+                  className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  title="Download Lossless PNG Sheet"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>PNG</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleDownloadPdf}
-                  className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                   title="Download Print-Ready PDF"
                 >
                   <FileText className="w-3.5 h-3.5 text-rose-400" />
@@ -465,31 +497,34 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
           </div>
         </div>
 
-        {/* Right 5 Cols: Sheet Configuration Panel */}
-        <div className="lg:col-span-5 space-y-4">
+        {/* Right 5 Cols: Sheet Configuration & Custom Copies Panel */}
+        <div className="w-full max-w-full lg:col-span-5 space-y-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 shadow-xl space-y-4">
+            {/* Header: Paper Selection */}
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Paper Size & Format</span>
+                <span>Paper Size & Dimensions</span>
               </h3>
               <span className="text-[10px] font-mono text-zinc-400">
                 {layoutInfo?.paperWidthMm} × {layoutInfo?.paperHeightMm} mm
               </span>
             </div>
 
-            {/* Paper Size Options */}
+            {/* Paper Size Options (A4 is highlighted as Default Standard) */}
             <div className="space-y-2">
               {PAPER_SIZES.map((paper) => {
                 const isSelected = selectedPaper.id === paper.id;
+                const isA4 = paper.id === 'a4';
                 return (
                   <button
                     key={paper.id}
+                    type="button"
                     onClick={() => {
                       setSelectedPaper(paper);
                       setSheetConfig({ ...sheetConfig, paperSizeId: paper.id });
                     }}
-                    className={`w-full text-left p-3 rounded-lg border transition-all flex items-start justify-between ${
+                    className={`w-full text-left p-3 rounded-lg border transition-all flex items-start justify-between cursor-pointer ${
                       isSelected
                         ? 'bg-indigo-950/40 border-indigo-500/80 text-white'
                         : 'bg-zinc-950/40 border-zinc-800/80 text-zinc-300 hover:border-zinc-700'
@@ -498,6 +533,11 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                     <div>
                       <div className="font-semibold text-xs text-white flex items-center gap-2">
                         <span>{paper.name}</span>
+                        {isA4 && (
+                          <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-1.5 py-0.2 rounded">
+                            Default Standard
+                          </span>
+                        )}
                         {isSelected && <Check className="w-3.5 h-3.5 text-indigo-400" />}
                       </div>
                       <div className="text-[11px] text-zinc-400 mt-0.5">
@@ -509,15 +549,15 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
               })}
             </div>
 
-            {/* Number of Copies: Custom User Selection */}
-            <div className="pt-2 border-t border-zinc-800 space-y-3">
+            {/* USER CUSTOM NUMBER OF PHOTOS SELECTION */}
+            <div className="pt-3 border-t border-zinc-800 space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
                   <Grid className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Custom Number of Photos</span>
+                  <span>Choose Custom Number of Photos</span>
                 </span>
-                <span className="text-[11px] font-mono text-emerald-400 font-semibold">
-                  {activePhotosCount} of {gridSlots.length} slots active
+                <span className="text-[11px] font-mono text-emerald-400 font-bold">
+                  {activePhotosCount} of {gridSlots.length} active
                 </span>
               </div>
 
@@ -564,9 +604,9 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                 </button>
               </div>
 
-              {/* Quick Preset Buttons */}
+              {/* Quick Preset Count Pills (1, 2, 4, 6, 8, 12, 16, 20, 24, 30) */}
               <div className="space-y-1.5">
-                <div className="text-[11px] text-zinc-400">Quick selection presets:</div>
+                <div className="text-[11px] text-zinc-400">Quick selection:</div>
                 <div className="flex flex-wrap gap-1.5">
                   {[1, 2, 4, 6, 8, 12, 16, 20, 24, 30]
                     .filter((c) => c <= gridSlots.length)
@@ -623,7 +663,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                   max="8"
                   value={sheetConfig.spacingMm}
                   onChange={(e) => setSheetConfig({ ...sheetConfig, spacingMm: Number(e.target.value) })}
-                  className="w-full accent-indigo-500"
+                  className="w-full accent-indigo-500 cursor-pointer"
                 />
               </div>
 
@@ -638,7 +678,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                   max="15"
                   value={sheetConfig.marginMm}
                   onChange={(e) => setSheetConfig({ ...sheetConfig, marginMm: Number(e.target.value) })}
-                  className="w-full accent-indigo-500"
+                  className="w-full accent-indigo-500 cursor-pointer"
                 />
               </div>
 
@@ -649,7 +689,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                     type="checkbox"
                     checked={sheetConfig.showCutGuidelines}
                     onChange={(e) => setSheetConfig({ ...sheetConfig, showCutGuidelines: e.target.checked })}
-                    className="accent-indigo-500 rounded"
+                    className="accent-indigo-500 rounded cursor-pointer"
                   />
                   <span className="text-zinc-300">Show Scissor Cutting Guidelines</span>
                 </label>
@@ -659,7 +699,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
                     type="checkbox"
                     checked={sheetConfig.showBorder}
                     onChange={(e) => setSheetConfig({ ...sheetConfig, showBorder: e.target.checked })}
-                    className="accent-indigo-500 rounded"
+                    className="accent-indigo-500 rounded cursor-pointer"
                   />
                   <span className="text-zinc-300">Draw Fine Border Around Each Photo</span>
                 </label>
@@ -668,7 +708,7 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
 
             {/* Print Tip */}
             <div className="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-lg text-[11px] text-zinc-400 leading-relaxed">
-              <strong>Printing Tip:</strong> In your browser print dialog, choose <code className="text-indigo-300 font-mono">Margins: None</code> and <code className="text-indigo-300 font-mono">Scale: 100%</code> (do not fit to printable area) to preserve true 300 DPI millimeter geometry.
+              <strong>A4 Printing Tip:</strong> In your browser print dialog (Ctrl+P), select <code className="text-indigo-300 font-mono">Paper: A4</code>, <code className="text-indigo-300 font-mono">Margins: None</code>, and <code className="text-indigo-300 font-mono">Scale: 100%</code> to preserve true 300 DPI millimeter geometry.
             </div>
           </div>
         </div>

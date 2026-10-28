@@ -19,7 +19,9 @@ import {
   ArrowRight,
   Maximize2,
   Check,
-  Info
+  AlertCircle,
+  Sliders,
+  RefreshCw
 } from 'lucide-react';
 import { PassportPreset } from '../types.ts';
 import { PASSPORT_PRESETS } from '../constants/presets.ts';
@@ -50,6 +52,7 @@ export const CropStep: React.FC<CropStepProps> = ({
   const [customHeight, setCustomHeight] = useState(45);
   const [naturalDimensions, setNaturalDimensions] = useState<{ width: number; height: number } | null>(null);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -132,6 +135,7 @@ export const CropStep: React.FC<CropStepProps> = ({
   // Webcam capture
   const startWebcam = async () => {
     try {
+      setCameraError(null);
       setIsWebcamActive(true);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -140,8 +144,8 @@ export const CropStep: React.FC<CropStepProps> = ({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-    } catch (err) {
-      alert('Could not access camera. Please allow camera permissions or upload a photo.');
+    } catch {
+      setCameraError('Camera access was denied or is unavailable. Please check permissions or upload a photo.');
       setIsWebcamActive(false);
     }
   };
@@ -196,7 +200,7 @@ export const CropStep: React.FC<CropStepProps> = ({
     onPresetChange(customP);
   };
 
-  // Perform High-Resolution Crop (ZERO QUALITY LOSS)
+  // Perform High-Resolution Crop (300 DPI geometry)
   const handleProceedToBackground = () => {
     if (!cropperRef.current) return;
 
@@ -217,11 +221,18 @@ export const CropStep: React.FC<CropStepProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start w-full max-w-full overflow-hidden">
       {/* Left 8 Cols: Interactive Viewport with Cropper.js and Biometric Guide */}
-      <div className="lg:col-span-8 space-y-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-xl space-y-3">
-          {/* Prominent Header with Immediate "Next: AI Retouch" button */}
+      <div className="w-full max-w-full lg:col-span-8 space-y-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 sm:p-5 shadow-xl space-y-3 max-w-full overflow-hidden">
+          {cameraError && (
+            <div className="p-3 bg-rose-950/60 border border-rose-800/80 rounded-lg text-xs text-rose-200 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{cameraError}</span>
+            </div>
+          )}
+
+          {/* Header with Preset Info and Next Step Trigger */}
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-zinc-800">
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -231,7 +242,7 @@ export const CropStep: React.FC<CropStepProps> = ({
                 </span>
               </h3>
               <p className="text-[11px] text-zinc-400 mt-0.5">
-                Align chin and crown within the oval guide. Wheel zoom is locked so scrolling never alters your crop.
+                Align chin and crown within the ICAO oval guide. Wheel zoom is locked so scrolling never alters your crop.
               </p>
             </div>
 
@@ -248,11 +259,11 @@ export const CropStep: React.FC<CropStepProps> = ({
             )}
           </div>
 
-          {/* Viewport Box */}
+          {/* Viewport Box (Strictly responsive height on mobile) */}
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            className="relative w-full h-[520px] bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800/80 flex items-center justify-center"
+            className="relative w-full h-[360px] sm:h-[460px] lg:h-[500px] bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800/80 flex items-center justify-center max-w-full"
           >
             {isWebcamActive ? (
               <div className="relative w-full h-full flex flex-col items-center justify-center bg-black">
@@ -264,22 +275,24 @@ export const CropStep: React.FC<CropStepProps> = ({
                 />
                 <div className="absolute bottom-4 flex items-center gap-3">
                   <button
+                    type="button"
                     onClick={captureWebcam}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg shadow-lg flex items-center gap-2"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg shadow-lg flex items-center gap-2 cursor-pointer"
                   >
                     <Camera className="w-4 h-4" />
                     <span>Take Snap</span>
                   </button>
                   <button
+                    type="button"
                     onClick={stopWebcam}
-                    className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg"
+                    className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg cursor-pointer"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : imageSrc ? (
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full overflow-hidden select-none">
                 <img
                   ref={imageRef}
                   src={imageSrc}
@@ -292,7 +305,7 @@ export const CropStep: React.FC<CropStepProps> = ({
                 />
               </div>
             ) : (
-              <div className="text-center p-8 max-w-md">
+              <div className="text-center p-6 sm:p-8 max-w-md">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-950/60 border border-indigo-800/50 flex items-center justify-center text-indigo-400">
                   <Upload className="w-8 h-8" />
                 </div>
@@ -305,16 +318,18 @@ export const CropStep: React.FC<CropStepProps> = ({
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <button
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30 cursor-pointer"
                   >
                     <Upload className="w-4 h-4" />
                     <span>Browse Image</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={startWebcam}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Camera className="w-4 h-4" />
                     <span>Use Webcam</span>
@@ -323,8 +338,9 @@ export const CropStep: React.FC<CropStepProps> = ({
 
                 <div className="mt-5 pt-4 border-t border-zinc-800/80">
                   <button
+                    type="button"
                     onClick={() => onImageLoaded(samplePortraitUrl)}
-                    className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Try with Studio Sample Portrait</span>
@@ -345,225 +361,188 @@ export const CropStep: React.FC<CropStepProps> = ({
           {/* Viewport Toolbar Controls */}
           {imageSrc && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 pt-2">
-              <div className="flex items-center gap-1 text-xs text-zinc-300">
+              <div className="flex items-center gap-1 text-xs text-zinc-300 flex-wrap">
                 <button
+                  type="button"
                   onClick={() => cropperRef.current?.rotate(-90)}
-                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   title="Rotate Left 90°"
+                  aria-label="Rotate Left 90 degrees"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => cropperRef.current?.rotate(90)}
-                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   title="Rotate Right 90°"
+                  aria-label="Rotate Right 90 degrees"
                 >
                   <RotateCw className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     const cropper = cropperRef.current;
                     if (!cropper) return;
                     const data = cropper.getData();
                     cropper.scaleX(data.scaleX === -1 ? 1 : -1);
                   }}
-                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors"
-                  title="Flip Horizontally"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                  title="Flip Horizontal"
+                  aria-label="Flip photo horizontally"
                 >
                   <FlipHorizontal className="w-4 h-4" />
                 </button>
+
                 <div className="h-4 w-px bg-zinc-800 mx-1" />
+
                 <button
+                  type="button"
                   onClick={() => cropperRef.current?.zoom(0.1)}
-                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   title="Zoom In"
+                  aria-label="Zoom in"
                 >
                   <ZoomIn className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => cropperRef.current?.zoom(-0.1)}
-                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   title="Zoom Out"
+                  aria-label="Zoom out"
                 >
                   <ZoomOut className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => cropperRef.current?.reset()}
-                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors text-[11px]"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-300 hover:text-white transition-colors cursor-pointer"
                   title="Reset Crop Position"
+                  aria-label="Reset crop position"
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  <RefreshCw className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowBiometricGuide(!showBiometricGuide)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                    showBiometricGuide
-                      ? 'bg-indigo-950/80 text-indigo-300 border border-indigo-700/60'
-                      : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
-                  }`}
-                >
-                  {showBiometricGuide ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  <span>Biometric Overlay</span>
-                </button>
+              {/* Biometric Guide Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowBiometricGuide(!showBiometricGuide)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border cursor-pointer ${
+                  showBiometricGuide
+                    ? 'bg-indigo-950/70 border-indigo-700/60 text-indigo-300'
+                    : 'bg-zinc-800/80 border-zinc-700/80 text-zinc-400 hover:text-zinc-200'
+                }`}
+                title="Toggle ICAO Biometric Head & Eye Guides"
+              >
+                {showBiometricGuide ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                <span>Biometric Oval Guide</span>
+              </button>
+            </div>
+          )}
 
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                >
-                  Change Photo
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleProceedToBackground}
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-sm shadow-indigo-600/30 flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <span>Next Step</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
+          {/* Image Dimensions & DPI Status */}
+          {naturalDimensions && (
+            <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-zinc-800/80">
+              <span>Original: {naturalDimensions.width} × {naturalDimensions.height} px</span>
+              <span className="text-indigo-400">
+                Target: {Math.round((selectedPreset.widthMm / 25.4) * 300)} × {Math.round((selectedPreset.heightMm / 25.4) * 300)} px @ 300 DPI
+              </span>
             </div>
           )}
         </div>
-
-        {/* Resolution Metadata Bar */}
-        {naturalDimensions && (
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg px-4 py-2.5 flex items-center justify-between text-xs text-zinc-400">
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 text-indigo-400" />
-              <span>
-                Input Resolution:{' '}
-                <strong className="text-zinc-200 font-mono">
-                  {naturalDimensions.width} × {naturalDimensions.height} px
-                </strong>{' '}
-                ({((naturalDimensions.width * naturalDimensions.height) / 1000000).toFixed(1)} MP)
-              </span>
-            </div>
-            <div className="font-mono text-emerald-400">
-              Output: {Math.round((selectedPreset.widthMm / 25.4) * 300)} × {Math.round((selectedPreset.heightMm / 25.4) * 300)} px @ 300 DPI
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Right 4 Cols: Passport Presets and Progression */}
-      <div className="lg:col-span-4 space-y-5">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl space-y-4">
+      {/* Right 4 Cols: Presets & Dimensional Settings */}
+      <div className="w-full max-w-full lg:col-span-4 space-y-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 shadow-xl space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-              1. Passport Dimension Presets
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Select Dimension Preset</span>
             </h3>
-            <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/70 border border-indigo-800/60 px-2 py-0.5 rounded">
-              300 DPI Standard
-            </span>
+            <span className="text-[10px] font-mono text-emerald-400 font-semibold">300 DPI</span>
           </div>
 
-          {/* Preset Buttons Grid */}
-          <div className="space-y-2">
+          {/* Preset Buttons List */}
+          <div className="space-y-2 max-h-[360px] sm:max-h-[460px] overflow-y-auto pr-1">
             {PASSPORT_PRESETS.map((preset) => {
               const isSelected = selectedPreset.id === preset.id;
               return (
                 <button
                   key={preset.id}
+                  type="button"
                   onClick={() => handleSelectPreset(preset)}
-                  className={`w-full text-left p-3 rounded-lg border transition-all flex items-start justify-between ${
+                  className={`w-full text-left p-3 rounded-lg border transition-all flex items-start justify-between cursor-pointer ${
                     isSelected
-                      ? 'bg-indigo-950/40 border-indigo-500/80 text-white shadow-sm shadow-indigo-500/10'
-                      : 'bg-zinc-950/40 border-zinc-800/80 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800/40'
+                      ? 'bg-indigo-950/40 border-indigo-500/80 text-white'
+                      : 'bg-zinc-950/40 border-zinc-800/80 text-zinc-300 hover:border-zinc-700'
                   }`}
                 >
                   <div className="pr-2">
                     <div className="font-semibold text-xs text-white flex items-center gap-2">
                       <span>{preset.name}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-400 shrink-0" />}
                     </div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5 leading-snug">
-                      {preset.country}
+                    <div className="text-[11px] text-zinc-400 mt-0.5">{preset.country}</div>
+                    <div className="text-[10px] text-zinc-500 mt-1 line-clamp-1">
+                      {preset.widthMm} × {preset.heightMm} mm
                     </div>
-                    <div className="text-[10px] text-zinc-500 font-mono mt-1">
-                      Target: {Math.round((preset.widthMm / 25.4) * 300)} × {Math.round((preset.heightMm / 25.4) * 300)} px
-                    </div>
-                  </div>
-                  <div className="font-mono text-xs text-indigo-400 whitespace-nowrap bg-zinc-900 px-2 py-1 rounded border border-zinc-800">
-                    {preset.widthMm}×{preset.heightMm} mm
                   </div>
                 </button>
               );
             })}
           </div>
 
-          {/* Custom Dimension Inputs if Custom selected */}
+          {/* Custom Millimeter Dimensions Editor (When 'custom' selected) */}
           {selectedPreset.id === 'custom' && (
-            <div className="p-3 bg-zinc-950/70 border border-zinc-800 rounded-lg space-y-3">
-              <div className="text-xs font-semibold text-zinc-200">Custom Dimensions (mm)</div>
+            <div className="pt-3 border-t border-zinc-800 space-y-3">
+              <div className="text-xs font-semibold text-zinc-300">Custom Dimensions (mm)</div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-zinc-400 block mb-1">Width (mm)</label>
                   <input
                     type="number"
-                    min="15"
+                    min="10"
                     max="150"
                     value={customWidth}
-                    onChange={(e) => handleCustomDimensionsChange(Number(e.target.value), customHeight)}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white font-mono"
+                    onChange={(e) =>
+                      handleCustomDimensionsChange(Number(e.target.value), customHeight)
+                    }
+                    className="w-full px-3 py-1.5 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
                   <label className="text-[10px] text-zinc-400 block mb-1">Height (mm)</label>
                   <input
                     type="number"
-                    min="15"
+                    min="10"
                     max="150"
                     value={customHeight}
-                    onChange={(e) => handleCustomDimensionsChange(customWidth, Number(e.target.value))}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded px-2.5 py-1.5 text-xs text-white font-mono"
+                    onChange={(e) =>
+                      handleCustomDimensionsChange(customWidth, Number(e.target.value))
+                    }
+                    className="w-full px-3 py-1.5 bg-zinc-950 border border-zinc-700 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 1 Completion Button */}
-          <div className="pt-3 border-t border-zinc-800">
-            <button
-              onClick={handleProceedToBackground}
-              disabled={!imageSrc}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-md ${
-                imageSrc
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30'
-                  : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-              }`}
-            >
-              <span>Next: AI Background & Retouch</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Sticky Next Bar - Guarantees Immediate Visibility without Scrolling */}
-      {imageSrc && (
-        <div className="lg:hidden sticky bottom-3 z-30 p-3 bg-[#0B1020]/95 backdrop-blur-md border border-indigo-500/60 rounded-xl shadow-2xl flex items-center justify-between gap-3">
-          <div>
-            <span className="font-bold text-xs text-white block">{selectedPreset.name}</span>
-            <span className="text-[10px] text-zinc-400 font-mono">Biometric Alignment</span>
-          </div>
-
+          {/* Bottom action trigger */}
           <button
             type="button"
             onClick={handleProceedToBackground}
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-indigo-600/40 flex items-center gap-1.5 cursor-pointer"
+            disabled={!imageSrc}
+            className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
-            <span>Next: AI Retouch</span>
+            <span>Proceed to AI Backdrop</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

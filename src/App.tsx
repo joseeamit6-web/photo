@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Camera,
   Printer,
   MessageCircle,
   AlertCircle,
@@ -16,16 +15,16 @@ import {
   X,
   Compass,
   ShieldCheck,
-  HelpCircle,
-  Globe,
-  Lock,
-  Layers
+  Sun,
+  Moon,
+  Sparkles,
+  Layers,
+  Lock
 } from 'lucide-react';
 import { HomeScreen } from './components/HomeScreen.tsx';
 import { CropStep } from './components/CropStep.tsx';
 import { BackgroundStep } from './components/BackgroundStep.tsx';
 import { PrintSheetStep } from './components/PrintSheetStep.tsx';
-import { NepalClock } from './components/NepalClock.tsx';
 import { PrivacyPolicyModal, TermsConditionsModal, SupportModal } from './components/LegalModals.tsx';
 import { BrandLogoHorizontal } from './components/BrandIdentity.tsx';
 import { PASSPORT_PRESETS } from './constants/presets.ts';
@@ -34,6 +33,8 @@ import { PassportPreset } from './types.ts';
 interface HeaderProps {
   activeStep: 'crop' | 'background' | 'sheet';
   hasImage: boolean;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
   onSelectStep: (step: 'crop' | 'background' | 'sheet') => void;
   onNewPhoto: () => void;
   onOpenSupport: () => void;
@@ -44,6 +45,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   activeStep,
   hasImage,
+  theme,
+  onToggleTheme,
   onSelectStep,
   onNewPhoto,
   onOpenSupport,
@@ -63,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="app-header"
-      className="border-b border-zinc-800 bg-[#0B1020]/95 backdrop-blur-md sticky top-0 z-40 w-full"
+      className="border-b border-zinc-800 bg-[#0B1020]/95 backdrop-blur-md sticky top-0 z-40 w-full max-w-full"
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Zone 1: Brand Wordmark with precision geometric symbol */}
@@ -75,7 +78,7 @@ const Header: React.FC<HeaderProps> = ({
             title="Passport Photo Studio · Home"
             aria-label="Passport Photo Studio Home"
           >
-            <BrandLogoHorizontal size={30} />
+            <BrandLogoHorizontal size={28} />
           </button>
         </div>
 
@@ -125,7 +128,7 @@ const Header: React.FC<HeaderProps> = ({
                 onClick={onOpenPrivacy}
                 className="hover:text-zinc-200 transition-colors cursor-pointer"
               >
-                Privacy Policy
+                Privacy & Security
               </button>
               <button
                 type="button"
@@ -136,18 +139,24 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             </nav>
           )}
-
-          <div className="hidden xl:flex items-center">
-            <NepalClock compact />
-          </div>
         </div>
 
-        {/* Zone 3: Primary Actions & Mobile Hamburger */}
+        {/* Zone 3: Primary Actions, Theme Toggle & Mobile Hamburger */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Live Nepal Clock for Medium Screens */}
-          <div className="hidden md:block lg:hidden">
-            <NepalClock compact />
-          </div>
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="w-9 h-9 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-300 flex items-center justify-center transition-colors cursor-pointer"
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-indigo-400" />
+            )}
+          </button>
 
           {/* New Photo Action (when photo loaded) */}
           {hasImage && (
@@ -201,9 +210,17 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Accessible Mobile Dropdown Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-zinc-800 bg-[#0B1020] px-4 py-3 space-y-3 no-print">
+        <div className="lg:hidden border-t border-zinc-800 bg-[#0B1020] px-4 py-3 space-y-3 no-print max-w-full">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-800 text-xs">
-            <NepalClock compact />
+            <span className="font-semibold text-zinc-300">Studio Menu</span>
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer"
+            >
+              {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-400" />}
+              <span>{theme === 'dark' ? 'Light Theme' : 'Dark Theme'}</span>
+            </button>
           </div>
 
           <div className="flex flex-col gap-2 text-xs font-medium text-zinc-300">
@@ -285,11 +302,46 @@ export default function App() {
   const [croppedCanvas, setCroppedCanvas] = useState<HTMLCanvasElement | null>(null);
   const [finalCanvas, setFinalCanvas] = useState<HTMLCanvasElement | null>(null);
 
-  // Lock HTML to dark mode permanently
+  // Theme Management (Defaults to dark, persisted in localStorage)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('passport_studio_theme');
+      if (stored === 'light' || stored === 'dark') return stored;
+    }
+    return 'dark';
+  });
+
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-    document.documentElement.classList.remove('light');
-  }, []);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('passport_studio_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Local Session Photo Counter (Private in-memory session count)
+  const [sessionPhotosCount, setSessionPhotosCount] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('passport_session_photos');
+      return stored ? parseInt(stored, 10) : 0;
+    }
+    return 0;
+  });
+
+  const incrementSessionCount = () => {
+    setSessionPhotosCount((prev) => {
+      const updated = prev + 1;
+      sessionStorage.setItem('passport_session_photos', updated.toString());
+      return updated;
+    });
+  };
 
   // Legal & Support Modals
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
@@ -302,6 +354,7 @@ export default function App() {
     setActiveStep('crop');
     setCroppedCanvas(null);
     setFinalCanvas(null);
+    incrementSessionCount();
   };
 
   // Crop completion callback
@@ -329,11 +382,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden">
-      {/* Responsive Top Navigation Header */}
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden w-full max-w-full">
+      {/* Responsive Top Navigation Header with Theme Toggle */}
       <Header
         activeStep={activeStep}
         hasImage={Boolean(imageSrc)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
         onSelectStep={setActiveStep}
         onNewPhoto={() => {
           setImageSrc(null);
@@ -347,7 +402,7 @@ export default function App() {
 
       {/* Main Studio Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 overflow-x-hidden">
-        {/* Support Notification Banner */}
+        {/* Support Notification Banner with direct WhatsApp and Email */}
         <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-300 no-print">
           <div className="flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -397,9 +452,9 @@ export default function App() {
           />
         ) : (
           <>
-            {/* Step Indicator Bar */}
-            <div id="studio-workflow-nav" className="flex items-center justify-between border-b border-zinc-800 pb-3 no-print">
-              <div className="flex items-center gap-1 sm:gap-3 text-xs overflow-x-auto py-1">
+            {/* Step Indicator Bar with responsive layout locking */}
+            <div id="studio-workflow-nav" className="flex items-center justify-between border-b border-zinc-800 pb-3 no-print max-w-full overflow-hidden">
+              <div className="flex items-center gap-1 sm:gap-3 text-xs overflow-x-auto py-1 max-w-full">
                 <button
                   type="button"
                   onClick={() => setActiveStep('crop')}
@@ -497,7 +552,7 @@ export default function App() {
           </>
         )}
 
-        {/* Dedicated Container / Slot for Advertisements */}
+        {/* Dedicated Container / Slot for Advertisements (Non-intrusive container reserved to prevent layout shifts) */}
         <div
           id="ad-space"
           className="w-full my-6 min-h-[90px] bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-zinc-500 text-xs text-center p-4 no-print transition-all"
@@ -511,7 +566,7 @@ export default function App() {
         </div>
       </main>
 
-      {/* Footer */}
+      {/* Footer with Trust Info, Session Counter & Legal Links */}
       <footer id="app-footer" className="border-t border-zinc-900 bg-zinc-950 py-6 px-4 sm:px-6 text-xs text-zinc-400 max-w-7xl w-full mx-auto no-print space-y-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 text-center">
@@ -524,14 +579,28 @@ export default function App() {
             <span>WhatsApp: <a href="https://wa.me/9779746241860" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">+977 9746241860</a></span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <NepalClock compact />
+          <div className="flex items-center gap-2 text-zinc-400 text-[11px] font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+            <span>Online Studio Active</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-center md:justify-between gap-3 pt-3 border-t border-zinc-900 text-[11px] text-zinc-500">
-          <div>
-            100% Client-Side Processing · No biometric data or images stored on servers.
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-1 text-emerald-400">
+              <Lock className="w-3 h-3" />
+              <span>100% Client-Side Processing</span>
+            </span>
+            <span>·</span>
+            <span>Zero server uploads</span>
+            {sessionPhotosCount > 0 && (
+              <>
+                <span>·</span>
+                <span className="font-mono text-indigo-400">
+                  {sessionPhotosCount} photo{sessionPhotosCount > 1 ? 's' : ''} prepared this session
+                </span>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-4 text-zinc-400">

@@ -7,10 +7,12 @@
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    max-width: 100vw;
   }
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow-x: hidden;
+    max-width: 100vw;
     min-height: 100vh;
   }
   html.dark body {
@@ -26,7 +28,13 @@
   }
 }
 
-/* Custom scrollbars for dark mode */
+/* Accessible focus outline */
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -42,7 +50,7 @@
   background: #3f3f46;
 }
 
-/* Cropper.js Dark Mode Overrides */
+/* Cropper.js Overrides & Viewport Locking */
 .cropper-view-box {
   outline: 2px solid #6366f1 !important;
   outline-color: #6366f1 !important;
@@ -77,6 +85,11 @@
 
 /* Strict Print Styling for CSS @media print */
 @media print {
+  @page {
+    margin: 0mm;
+    size: auto;
+  }
+
   html, body {
     background: #ffffff !important;
     color: #000000 !important;
@@ -99,7 +112,8 @@
   #app-header,
   #app-sidebar,
   #app-footer,
-  #studio-workflow-nav {
+  #studio-workflow-nav,
+  #ad-space {
     display: none !important;
   }
 
@@ -112,7 +126,7 @@
     width: 100% !important;
     height: auto !important;
     margin: 0 !important;
-    padding: 5mm 0 0 0 !important; /* Start strictly 5mm from top */
+    padding: 0 !important;
     background: #ffffff !important;
   }
 
@@ -120,13 +134,8 @@
     display: block !important;
     max-width: 100% !important;
     height: auto !important;
-    margin: 0 auto !important; /* horizontally centered, vertically at the top */
+    margin: 0 auto !important;
     box-shadow: none !important;
     border: none !important;
-  }
-
-  @page {
-    margin: 0mm;
-    size: auto;
   }
 }

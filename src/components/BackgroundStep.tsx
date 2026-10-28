@@ -12,7 +12,9 @@ import {
   Sliders,
   Check,
   Zap,
-  Loader2
+  Loader2,
+  RefreshCw,
+  Image as ImageIcon
 } from 'lucide-react';
 import { PassportPreset, ImageAdjustments } from '../types.ts';
 import { PRESET_BACKGROUND_COLORS } from '../constants/presets.ts';
@@ -114,7 +116,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
       img.src = URL.createObjectURL(transparentBlob);
     } catch (err) {
       console.error(err);
-      setErrorNotice('AI processing encountered an issue. You can use the Instant Wall Keying tool below, or contact Support at admin@amitjoshi.info.np or WhatsApp at +977 9746241860.');
+      setErrorNotice('AI processing encountered a network timeout. You can use the Instant Wall Keying tool below, or contact Support at admin@amitjoshi.info.np or WhatsApp at +977 9746241860.');
       setIsRemovingBg(false);
       setAiProgress(null);
     }
@@ -128,7 +130,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
     setCutoutCanvas(keyed);
   };
 
-  // Download single photo
+  // Download single photo with 300 DPI metadata
   const handleDownloadSingle = async (format: 'jpeg' | 'png') => {
     if (!previewCanvasRef.current) return;
     const filename = `passport-${selectedPreset.widthMm}x${selectedPreset.heightMm}mm-300dpi.${format === 'jpeg' ? 'jpg' : 'png'}`;
@@ -149,10 +151,10 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start w-full max-w-full overflow-hidden">
       {/* Left 7 Cols: Full Resolution Preview Display */}
-      <div className="lg:col-span-7 space-y-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl flex flex-col items-center">
+      <div className="w-full max-w-full lg:col-span-7 space-y-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 sm:p-5 shadow-xl flex flex-col items-center max-w-full overflow-hidden">
           <div className="w-full flex items-center justify-between mb-4 pb-2 border-b border-zinc-800">
             <div>
               <h3 className="text-sm font-semibold text-white">Passport Photo Preview</h3>
@@ -170,7 +172,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
 
           {/* Canvas Preview Container with checkerboard background for transparency */}
           <div
-            className="relative max-w-sm w-full aspect-[35/45] rounded-lg overflow-hidden border-2 border-zinc-700/80 shadow-2xl flex items-center justify-center"
+            className="relative max-w-xs sm:max-w-sm w-full rounded-lg overflow-hidden border-2 border-zinc-700/80 shadow-2xl flex items-center justify-center mx-auto"
             style={{
               aspectRatio: `${selectedPreset.widthMm} / ${selectedPreset.heightMm}`,
               backgroundImage:
@@ -197,7 +199,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   />
                 </div>
                 <div className="text-[10px] text-zinc-400 mt-2 font-mono">
-                  {aiProgress?.percent || 20}% complete · 0 API keys · zero data sent
+                  {aiProgress?.percent || 20}% complete · 100% in-browser private
                 </div>
               </div>
             )}
@@ -206,69 +208,70 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
           {/* Quick Single Photo Download Row */}
           <div className="w-full mt-5 pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3">
             <button
+              type="button"
               onClick={onBackToCrop}
-              className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors"
+              className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Crop</span>
             </button>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
+                type="button"
                 onClick={() => handleDownloadSingle('jpeg')}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
-                title="Download 300 DPI JPEG"
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Download 300 DPI JPEG Photo"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Single 300 DPI JPEG</span>
               </button>
+
               <button
+                type="button"
                 onClick={() => handleDownloadSingle('png')}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
-                title="Download lossless PNG"
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Download Lossless PNG Photo"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Lossless PNG</span>
+                <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Single PNG</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right 5 Cols: AI Background Removal, Colors & Retouch Sliders */}
-      <div className="lg:col-span-5 space-y-4">
-        {/* 1. Background Isolation Panel */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl space-y-4">
+      {/* Right 5 Cols: AI Background Removal & Retouch Controls */}
+      <div className="w-full max-w-full lg:col-span-5 space-y-4">
+        {/* 1. AI Cutout Panel */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 shadow-xl space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-              2. AI Background Removal
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>2. AI Background Removal</span>
             </h3>
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded">
-              WebAssembly
-            </span>
+            <span className="text-[10px] font-mono text-emerald-400 font-semibold">WebAssembly</span>
           </div>
+
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            Extracts the portrait cleanly from any background without sending your image to any server.
+          </p>
 
           {errorNotice && (
             <div className="p-3 bg-rose-950/40 border border-rose-800/60 rounded-lg text-xs text-rose-200 space-y-1.5">
-              <div className="font-semibold text-rose-300">Processing Error</div>
+              <div className="font-semibold text-rose-300">Processing Notice</div>
               <p className="text-[11px] leading-relaxed text-zinc-300">
-                If any error occurs or AI processing fails, contact Support at{' '}
-                <a href="mailto:admin@amitjoshi.info.np" className="text-indigo-400 font-semibold underline">
-                  admin@amitjoshi.info.np
-                </a>{' '}
-                or WhatsApp at{' '}
-                <a href="https://wa.me/9779746241860" target="_blank" rel="noreferrer" className="text-emerald-400 font-semibold underline">
-                  +977 9746241860
-                </a>.
+                {errorNotice}
               </p>
             </div>
           )}
 
           <div className="space-y-2.5">
             <button
+              type="button"
               onClick={handleRemoveBackgroundAI}
               disabled={isRemovingBg}
-              className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-md ${
+              className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
                 isRemovingBg
                   ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                   : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/25'
@@ -279,8 +282,9 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={handleInstantColorKey}
-              className="w-full py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <Zap className="w-3.5 h-3.5 text-amber-400" />
               <span>Instant Wall Color Keying (0-second)</span>
@@ -289,10 +293,11 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
 
           {cutoutCanvas && (
             <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
-              <span>Subject mask active</span>
+              <span className="text-emerald-400 font-semibold">Subject mask active</span>
               <button
+                type="button"
                 onClick={() => setCutoutCanvas(null)}
-                className="text-xs text-rose-400 hover:underline"
+                className="text-xs text-rose-400 hover:underline cursor-pointer"
               >
                 Reset to Original Background
               </button>
@@ -301,23 +306,25 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
         </div>
 
         {/* 2. Backdrop Color Palette */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl space-y-3">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 shadow-xl space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-            3. Backdrop Color
+            3. Official Backdrop Color
           </h3>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
             {PRESET_BACKGROUND_COLORS.map((bg) => {
               const isSelected = selectedBgColor.toLowerCase() === bg.hex.toLowerCase();
               return (
                 <button
                   key={bg.id}
+                  type="button"
                   onClick={() => setSelectedBgColor(bg.hex)}
-                  className={`p-2 rounded-lg border text-left transition-all flex flex-col items-center justify-center gap-1.5 ${
+                  className={`p-2 rounded-lg border text-left transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                     isSelected
                       ? 'border-indigo-500 bg-indigo-950/30'
                       : 'border-zinc-800 bg-zinc-950/50 hover:border-zinc-700'
                   }`}
+                  title={`${bg.name} - ${bg.description}`}
                 >
                   <div
                     className="w-7 h-7 rounded-md border border-zinc-700 shadow-inner flex items-center justify-center"
@@ -352,6 +359,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 setSelectedBgColor(e.target.value);
               }}
               className="w-8 h-8 rounded border border-zinc-700 bg-transparent cursor-pointer"
+              aria-label="Pick custom background color"
             />
             <div className="text-xs text-zinc-300 font-mono">
               Custom Hex: <span className="text-indigo-400 uppercase">{selectedBgColor}</span>
@@ -360,13 +368,14 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
         </div>
 
         {/* 3. Retouching Sliders */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl space-y-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 shadow-xl space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-indigo-400" />
               <span>4. Retouching & Lighting</span>
             </h3>
             <button
+              type="button"
               onClick={() =>
                 setAdjustments({
                   brightness: 0,
@@ -377,7 +386,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                   flipHorizontal: false,
                 })
               }
-              className="text-[11px] text-zinc-400 hover:text-white transition-colors"
+              className="text-[11px] text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               Reset All
             </button>
@@ -396,7 +405,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 max="50"
                 value={adjustments.brightness}
                 onChange={(e) => setAdjustments({ ...adjustments, brightness: Number(e.target.value) })}
-                className="w-full accent-indigo-500"
+                className="w-full accent-indigo-500 cursor-pointer"
               />
             </div>
 
@@ -412,7 +421,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 max="50"
                 value={adjustments.contrast}
                 onChange={(e) => setAdjustments({ ...adjustments, contrast: Number(e.target.value) })}
-                className="w-full accent-indigo-500"
+                className="w-full accent-indigo-500 cursor-pointer"
               />
             </div>
 
@@ -428,7 +437,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 max="50"
                 value={adjustments.saturation}
                 onChange={(e) => setAdjustments({ ...adjustments, saturation: Number(e.target.value) })}
-                className="w-full accent-indigo-500"
+                className="w-full accent-indigo-500 cursor-pointer"
               />
             </div>
 
@@ -444,7 +453,7 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
                 max="100"
                 value={adjustments.sharpness}
                 onChange={(e) => setAdjustments({ ...adjustments, sharpness: Number(e.target.value) })}
-                className="w-full accent-indigo-500"
+                className="w-full accent-indigo-500 cursor-pointer"
               />
             </div>
           </div>
@@ -452,10 +461,11 @@ export const BackgroundStep: React.FC<BackgroundStepProps> = ({
 
         {/* Step 2 Completion Button */}
         <button
+          type="button"
           onClick={handleProceed}
-          className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all"
+          className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
-          <span>Next: Generate Print Sheet</span>
+          <span>Next: Generate A4 Print Sheet</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
