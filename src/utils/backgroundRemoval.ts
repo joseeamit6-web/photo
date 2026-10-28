@@ -43,24 +43,8 @@ export async function removeBackgroundWithAI(
 
     return blob;
   } catch (error) {
-    console.warn('Primary @imgly model failed or interrupted, falling back to secondary CDN:', error);
-    // Secondary fallback directly via dynamic ESM import
-    try {
-      const imgly = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm' as string);
-      const fallbackBlob = await imgly.removeBackground(imageSource, {
-        publicPath: 'https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/',
-        progress: (key: string, current: number, total: number) => {
-          const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 50;
-          if (onProgress) {
-            onProgress({ phase: `AI Segmentation (${key})...`, percent });
-          }
-        },
-      });
-      return fallbackBlob;
-    } catch (fallbackError) {
-      console.error('AI background removal error:', fallbackError);
-      throw new Error('Could not run AI background removal. Please check your internet connection or use the Instant Color Key tool.');
-    }
+    console.warn('AI background removal error:', error);
+    throw new Error('Could not run AI background removal. Please check your internet connection or use the Instant Color Key tool.');
   }
 }
 

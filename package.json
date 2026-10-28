@@ -1,6 +1,7 @@
 {
   "name": "passport-photo-studio",
   "private": true,
+  "homepage": "https://joseeamit6-web.github.io/photo",
   "version": "0.0.0",
   "type": "module",
   "scripts": {

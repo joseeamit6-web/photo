@@ -3,13 +3,32 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   return {
-    base: './',
+    base: command === 'build' ? (process.env.BASE_URL || '/photo/') : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('.', import.meta.url)),
+      },
+    },
+    build: {
+      target: 'es2022',
+      outDir: 'dist',
+      assetsDir: 'assets',
+      sourcemap: false,
+      chunkSizeWarningLimit: 30000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('@imgly')) return 'imgly-ai';
+              if (id.includes('jspdf')) return 'jspdf-generator';
+              if (id.includes('cropperjs')) return 'cropperjs';
+              return 'vendor';
+            }
+          },
+        },
       },
     },
     server: {
