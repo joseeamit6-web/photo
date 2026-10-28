@@ -96,24 +96,17 @@ export function calculateSheetLayout(
 
   const actualCopies = config.copyCount > 0 ? Math.min(config.copyCount, chosen.totalFit) : chosen.totalFit;
 
-  // Determine actual cols and rows needed for actualCopies
-  let activeCols = chosen.cols;
-  let activeRows = Math.ceil(actualCopies / activeCols);
-  if (activeRows === 1 && actualCopies < activeCols) {
-    activeCols = actualCopies;
-  }
-
-  // Grid dimensions
-  const gridWidthMm = activeCols * photoW + (activeCols - 1) * spacing;
-  const gridHeightMm = activeRows * photoH + (activeRows - 1) * spacing;
+  // Consistent grid width based on full printable columns
+  const gridWidthMm = chosen.cols * photoW + (chosen.cols - 1) * spacing;
+  const gridHeightMm = chosen.rows * photoH + (chosen.rows - 1) * spacing;
 
   // Horizontally centered within paper, and strictly TOP-ALIGNED with margin (starts from top down)
   const startXmm = Math.max(margin, (chosen.pWidth - gridWidthMm) / 2);
-  const startYmm = Math.max(5, margin); // strictly top of the page (5mm or margin), not half/middle
+  const startYmm = Math.max(5, margin); // strictly top of the page (5mm or margin)
 
   return {
-    cols: activeCols,
-    rows: activeRows,
+    cols: chosen.cols,
+    rows: chosen.rows,
     totalFit: chosen.totalFit,
     actualCopies,
     isLandscape,

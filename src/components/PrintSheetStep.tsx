@@ -16,6 +16,7 @@ import {
   Layers,
   RotateCw,
   Plus,
+  Minus,
   Trash2,
   Move,
   Sparkles,
@@ -191,6 +192,20 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
   // Clear all slots
   const handleClearAllSlots = () => {
     setGridSlots((prev) => prev.map((s) => ({ ...s, hasPhoto: false })));
+  };
+
+  // Set custom number of photos directly
+  const handleSetCustomCount = (newCount: number) => {
+    const total = gridSlots.length || 1;
+    const clamped = Math.max(0, Math.min(newCount, total));
+    setSheetConfig((prev) => ({ ...prev, copyCount: clamped }));
+    setGridSlots((prev) =>
+      prev.map((s, idx) => ({
+        ...s,
+        hasPhoto: idx < clamped,
+        isRotated: false,
+      }))
+    );
   };
 
   // Reset to auto layout
@@ -494,53 +509,100 @@ export const PrintSheetStep: React.FC<PrintSheetStepProps> = ({
               })}
             </div>
 
-            {/* Number of Copies Preset Buttons */}
-            <div className="pt-2 border-t border-zinc-800 space-y-2">
+            {/* Number of Copies: Custom User Selection */}
+            <div className="pt-2 border-t border-zinc-800 space-y-3">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-zinc-300 flex items-center gap-1.5">
                   <Grid className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Number of Copies</span>
+                  <span>Custom Number of Photos</span>
                 </span>
-                <span className="text-[11px] font-mono text-emerald-400">
+                <span className="text-[11px] font-mono text-emerald-400 font-semibold">
                   {activePhotosCount} of {gridSlots.length} slots active
                 </span>
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
-                {[4, 6, 8, 12].map((count) => {
-                  const isSelected = activePhotosCount === count;
-                  return (
-                    <button
-                      key={count}
-                      onClick={() => {
-                        setSheetConfig({ ...sheetConfig, copyCount: count });
-                        setGridSlots((prev) =>
-                          prev.map((s, idx) => ({ ...s, hasPhoto: idx < count }))
-                        );
-                      }}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition-all border ${
-                        isSelected
-                          ? 'bg-indigo-600 text-white border-indigo-500'
-                          : 'bg-zinc-950/50 text-zinc-300 border-zinc-800 hover:bg-zinc-800'
-                      }`}
-                    >
-                      {count} Photos
-                    </button>
-                  );
-                })}
+              {/* Stepper + Direct Numeric Input */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSetCustomCount(activePhotosCount - 1)}
+                  disabled={activePhotosCount <= 0}
+                  className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 flex items-center justify-center transition-colors border border-zinc-700 shrink-0 cursor-pointer"
+                  aria-label="Decrease photo count by 1"
+                  title="Decrease copies"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max={gridSlots.length}
+                    value={activePhotosCount}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      handleSetCustomCount(isNaN(val) ? 0 : val);
+                    }}
+                    className="w-full h-10 px-3 bg-zinc-950 border border-zinc-700 rounded-lg text-center font-mono text-sm font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                    aria-label="Enter exact custom number of photos"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 font-mono pointer-events-none">
+                    max {gridSlots.length}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSetCustomCount(activePhotosCount + 1)}
+                  disabled={activePhotosCount >= gridSlots.length}
+                  className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-200 flex items-center justify-center transition-colors border border-zinc-700 shrink-0 cursor-pointer"
+                  aria-label="Increase photo count by 1"
+                  title="Increase copies"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="space-y-1.5">
+                <div className="text-[11px] text-zinc-400">Quick selection presets:</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[1, 2, 4, 6, 8, 12, 16, 20, 24, 30]
+                    .filter((c) => c <= gridSlots.length)
+                    .map((count) => {
+                      const isSelected = activePhotosCount === count;
+                      return (
+                        <button
+                          key={count}
+                          type="button"
+                          onClick={() => handleSetCustomCount(count)}
+                          className={`py-1 px-2.5 rounded-md text-xs font-semibold transition-all border cursor-pointer ${
+                            isSelected
+                              ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
+                              : 'bg-zinc-950/60 text-zinc-300 border-zinc-800 hover:bg-zinc-800'
+                          }`}
+                        >
+                          {count}
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
+                  type="button"
                   onClick={handleFillAllSlots}
-                  className="py-2 px-3 rounded-lg text-xs font-semibold transition-all border border-indigo-500/80 bg-indigo-950/40 text-indigo-200 hover:bg-indigo-900/50 flex items-center justify-center gap-1.5"
+                  className="py-2 px-3 rounded-lg text-xs font-semibold transition-all border border-indigo-500/80 bg-indigo-950/40 text-indigo-200 hover:bg-indigo-900/50 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Maximize className="w-3.5 h-3.5" />
-                  <span>Fill All Slots ({gridSlots.length})</span>
+                  <span>Fill Page ({gridSlots.length})</span>
                 </button>
                 <button
+                  type="button"
                   onClick={handleClearAllSlots}
-                  className="py-2 px-3 rounded-lg text-xs font-semibold transition-all border border-zinc-800 bg-zinc-950/50 text-zinc-300 hover:bg-zinc-800 flex items-center justify-center gap-1.5"
+                  className="py-2 px-3 rounded-lg text-xs font-semibold transition-all border border-zinc-800 bg-zinc-950/50 text-zinc-300 hover:bg-zinc-800 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5 text-rose-400" />
                   <span>Clear All</span>

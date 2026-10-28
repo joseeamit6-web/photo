@@ -3,15 +3,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Camera, Printer, MessageCircle, AlertCircle, Phone, Mail, PlusCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Camera,
+  Printer,
+  MessageCircle,
+  AlertCircle,
+  Phone,
+  Mail,
+  PlusCircle,
+  Menu,
+  X,
+  Compass,
+  ShieldCheck,
+  HelpCircle,
+  Globe,
+  Lock,
+  Layers
+} from 'lucide-react';
 import { HomeScreen } from './components/HomeScreen.tsx';
 import { CropStep } from './components/CropStep.tsx';
 import { BackgroundStep } from './components/BackgroundStep.tsx';
 import { PrintSheetStep } from './components/PrintSheetStep.tsx';
 import { PrivacyPolicyModal, TermsConditionsModal, SupportModal } from './components/LegalModals.tsx';
-import { BrandLogoHorizontal, BrandAssetModal } from './components/BrandIdentity.tsx';
-import brandConceptImg from './assets/images/photo_studio_brand_identity_1793158006074.jpg';
+import { BrandLogoHorizontal } from './components/BrandIdentity.tsx';
 import { PASSPORT_PRESETS } from './constants/presets.ts';
 import { PassportPreset } from './types.ts';
 
@@ -21,7 +36,7 @@ interface HeaderProps {
   onSelectStep: (step: 'crop' | 'background' | 'sheet') => void;
   onNewPhoto: () => void;
   onOpenSupport: () => void;
-  onOpenBrand: () => void;
+  onOpenPrivacy: () => void;
   onTriggerPrint: () => void;
 }
 
@@ -31,106 +46,244 @@ const Header: React.FC<HeaderProps> = ({
   onSelectStep,
   onNewPhoto,
   onOpenSupport,
-  onOpenBrand,
+  onOpenPrivacy,
   onTriggerPrint,
 }) => {
-  return (
-    <header id="app-header" className="border-b border-zinc-800 bg-[#0B1020]/95 backdrop-blur-md sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Zone 1: Brand Wordmark with precision geometric symbol */}
-        <button
-          onClick={onOpenBrand}
-          className="flex items-center gap-3 shrink-0 text-left hover:opacity-90 transition-opacity cursor-pointer group"
-          title="Click to view Photo Studio Brand Identity & Vector Assets"
-        >
-          <BrandLogoHorizontal size={32} />
-        </button>
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-        {/* Zone 2: Navigation Links (when image loaded) */}
-        {hasImage ? (
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-zinc-400">
-            <button
-              onClick={() => onSelectStep('crop')}
-              className={`whitespace-nowrap transition-colors py-1 hover:text-white ${
-                activeStep === 'crop' ? 'text-indigo-400 font-semibold border-b-2 border-indigo-500' : ''
-              }`}
-            >
-              1. Crop & Biometrics
-            </button>
-            <button
-              onClick={() => onSelectStep('background')}
-              className={`whitespace-nowrap transition-colors py-1 hover:text-white ${
-                activeStep === 'background' ? 'text-indigo-400 font-semibold border-b-2 border-indigo-500' : ''
-              }`}
-            >
-              2. AI Background & Retouch
-            </button>
-            <button
-              onClick={() => onSelectStep('sheet')}
-              className={`whitespace-nowrap transition-colors py-1 hover:text-white ${
-                activeStep === 'sheet' ? 'text-indigo-400 font-semibold border-b-2 border-indigo-500' : ''
-              }`}
-            >
-              3. Multi-Photo Sheet
-            </button>
-          </nav>
-        ) : (
-          <div className="hidden sm:block text-xs text-zinc-400 font-mono">
-            Biometric Standards · Free AI Studio
-          </div>
-        )}
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <header
+      id="app-header"
+      className="border-b border-zinc-800 bg-[#0B1020]/95 backdrop-blur-md sticky top-0 z-40 w-full"
+    >
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Zone 1: Brand Wordmark with precision geometric symbol */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={onNewPhoto}
+            className="flex items-center gap-2.5 text-left hover:opacity-90 transition-opacity cursor-pointer group"
+            title="Passport Photo Studio · Home"
+            aria-label="Passport Photo Studio Home"
+          >
+            <BrandLogoHorizontal size={30} />
+          </button>
+        </div>
+
+        {/* Zone 2: Navigation Links & Nepal Live Clock */}
+        <div className="hidden lg:flex items-center gap-5 text-xs font-medium text-zinc-400">
+          {hasImage ? (
+            <nav className="flex items-center gap-4 text-xs font-medium text-zinc-400" aria-label="Editor Workflow Steps">
+              <button
+                type="button"
+                onClick={() => onSelectStep('crop')}
+                className={`whitespace-nowrap transition-colors py-1 hover:text-white cursor-pointer ${
+                  activeStep === 'crop' ? 'text-indigo-400 font-semibold border-b-2 border-indigo-500' : ''
+                }`}
+              >
+                1. Biometric Crop
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectStep('background')}
+                className={`whitespace-nowrap transition-colors py-1 hover:text-white cursor-pointer ${
+                  activeStep === 'background' ? 'text-indigo-400 font-semibold border-b-2 border-indigo-500' : ''
+                }`}
+              >
+                2. AI Backdrop & Retouch
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectStep('sheet')}
+                className={`whitespace-nowrap transition-colors py-1 hover:text-white cursor-pointer ${
+                  activeStep === 'sheet' ? 'text-indigo-400 font-semibold border-b-2 border-indigo-500' : ''
+                }`}
+              >
+                3. A4 Print Sheet
+              </button>
+            </nav>
+          ) : (
+            <nav className="flex items-center gap-5 text-xs text-zinc-400 font-medium" aria-label="Main Navigation">
+              <button
+                type="button"
+                onClick={() => scrollToSection('presets-guide-section')}
+                className="hover:text-zinc-200 transition-colors cursor-pointer"
+              >
+                Photo Presets
+              </button>
+              <button
+                type="button"
+                onClick={onOpenPrivacy}
+                className="hover:text-zinc-200 transition-colors cursor-pointer"
+              >
+                Privacy Policy
+              </button>
+              <button
+                type="button"
+                onClick={onOpenSupport}
+                className="hover:text-zinc-200 transition-colors cursor-pointer"
+              >
+                Help & Contact
+              </button>
+            </nav>
+          )}
+
+        </div>
 
         {/* Zone 3: Primary Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+
+          {/* New Photo Action (when photo loaded) */}
           {hasImage && (
             <button
+              type="button"
               onClick={onNewPhoto}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 rounded-lg transition-colors whitespace-nowrap"
-              title="Add another photo from homescreen"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+              title="Add a new photo from the homescreen"
             >
               <PlusCircle className="w-3.5 h-3.5 text-indigo-400" />
               <span className="hidden sm:inline">New Photo</span>
             </button>
           )}
 
+          {/* WhatsApp Support Action */}
           <button
+            type="button"
             onClick={onOpenSupport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-950/50 hover:bg-emerald-900/50 border border-emerald-800/60 rounded-lg transition-colors whitespace-nowrap"
-            title="Need Help? Contact Support"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-800/70 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+            title="Need Help? Contact Support via WhatsApp"
           >
             <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden sm:inline">WhatsApp Help</span>
             <span className="sm:hidden">Help</span>
           </button>
 
+          {/* Primary Print Trigger (when photo loaded) */}
           {hasImage && (
             <button
+              type="button"
               onClick={onTriggerPrint}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors shadow-sm shadow-indigo-600/30 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors shadow-sm shadow-indigo-600/30 whitespace-nowrap cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print Sheet</span>
+              <span>Print A4</span>
             </button>
           )}
+
+          {/* Mobile Menu Hamburger Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden w-9 h-9 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-300 flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Toggle mobile navigation menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
         </div>
       </div>
+
+      {/* Accessible Mobile Dropdown Menu Drawer */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-zinc-800 bg-[#0B1020] px-4 py-3 space-y-3 no-print">
+
+          <div className="flex flex-col gap-2 text-xs font-medium text-zinc-300">
+            {hasImage ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectStep('crop');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`text-left py-2 px-3 rounded-lg ${activeStep === 'crop' ? 'bg-indigo-950 text-indigo-300' : 'hover:bg-zinc-900'}`}
+                >
+                  1. Biometric Crop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectStep('background');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`text-left py-2 px-3 rounded-lg ${activeStep === 'background' ? 'bg-indigo-950 text-indigo-300' : 'hover:bg-zinc-900'}`}
+                >
+                  2. AI Backdrop & Retouch
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectStep('sheet');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`text-left py-2 px-3 rounded-lg ${activeStep === 'sheet' ? 'bg-indigo-950 text-indigo-300' : 'hover:bg-zinc-900'}`}
+                >
+                  3. A4 Print Sheet
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('presets-guide-section')}
+                  className="text-left py-2 px-3 rounded-lg hover:bg-zinc-900"
+                >
+                  International Size Presets
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenPrivacy();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-left py-2 px-3 rounded-lg hover:bg-zinc-900"
+                >
+                  Privacy Policy & Zero Cloud Uploads
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenSupport();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-left py-2 px-3 rounded-lg hover:bg-zinc-900 text-emerald-400"
+                >
+                  Contact Support (WhatsApp / Email)
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
 
 export default function App() {
   const [activeStep, setActiveStep] = useState<'crop' | 'background' | 'sheet'>('crop');
-  // Starts on Clean Homescreen with Add Image and Tips
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<PassportPreset>(PASSPORT_PRESETS[0]);
   const [croppedCanvas, setCroppedCanvas] = useState<HTMLCanvasElement | null>(null);
   const [finalCanvas, setFinalCanvas] = useState<HTMLCanvasElement | null>(null);
 
-  // Legal & Support & Brand Modals
+  // Lock HTML to dark mode permanently
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('light');
+  }, []);
+
+  // Legal & Support Modals
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
-  const [isBrandOpen, setIsBrandOpen] = useState(false);
 
   // User selects an image on Homescreen
   const handleImageSelected = (src: string) => {
@@ -165,8 +318,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* 3-Zone Top Navigation Bar */}
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden">
+      {/* Responsive Top Navigation Header */}
       <Header
         activeStep={activeStep}
         hasImage={Boolean(imageSrc)}
@@ -177,18 +330,18 @@ export default function App() {
           setFinalCanvas(null);
         }}
         onOpenSupport={() => setIsSupportOpen(true)}
-        onOpenBrand={() => setIsBrandOpen(true)}
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
         onTriggerPrint={handleTriggerPrint}
       />
 
       {/* Main Studio Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5 overflow-x-hidden">
         {/* Support Notification Banner */}
         <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-300 no-print">
           <div className="flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-indigo-400 shrink-0" />
             <span>
-              If any error occurs or AI processing fails, contact Support at{' '}
+              Direct assistance & troubleshooting: contact Support at{' '}
               <a href="mailto:admin@amitjoshi.info.np" className="text-indigo-400 font-semibold hover:underline">
                 admin@amitjoshi.info.np
               </a>{' '}
@@ -226,15 +379,20 @@ export default function App() {
 
         {/* Condition: Show Homescreen if no image selected */}
         {!imageSrc ? (
-          <HomeScreen onImageSelected={handleImageSelected} />
+          <HomeScreen
+            onImageSelected={handleImageSelected}
+            selectedPreset={selectedPreset}
+            onSelectPreset={setSelectedPreset}
+          />
         ) : (
           <>
             {/* Step Indicator Bar */}
-            <div id="studio-workflow-nav" className="flex items-center justify-between border-b border-zinc-850 pb-3 no-print">
-              <div className="flex items-center gap-1 sm:gap-4 text-xs overflow-x-auto py-1">
+            <div id="studio-workflow-nav" className="flex items-center justify-between border-b border-zinc-800 pb-3 no-print">
+              <div className="flex items-center gap-1 sm:gap-3 text-xs overflow-x-auto py-1">
                 <button
+                  type="button"
                   onClick={() => setActiveStep('crop')}
-                  className={`flex items-center gap-2 py-1.5 px-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2 py-1.5 px-3 rounded-lg font-medium transition-all whitespace-nowrap cursor-pointer ${
                     activeStep === 'crop'
                       ? 'bg-indigo-950/70 text-indigo-300 border border-indigo-700/60 shadow-sm'
                       : 'text-zinc-400 hover:text-zinc-200'
@@ -247,11 +405,12 @@ export default function App() {
                 <span className="text-zinc-600">/</span>
 
                 <button
+                  type="button"
                   onClick={() => {
                     if (croppedCanvas) setActiveStep('background');
                   }}
                   disabled={!croppedCanvas}
-                  className={`flex items-center gap-2 py-1.5 px-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2 py-1.5 px-3 rounded-lg font-medium transition-all whitespace-nowrap cursor-pointer ${
                     activeStep === 'background'
                       ? 'bg-indigo-950/70 text-indigo-300 border border-indigo-700/60 shadow-sm'
                       : croppedCanvas
@@ -260,17 +419,18 @@ export default function App() {
                   }`}
                 >
                   <span className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-mono">2</span>
-                  <span>2. AI Background & Retouch</span>
+                  <span>2. AI Backdrop & Retouch</span>
                 </button>
 
                 <span className="text-zinc-600">/</span>
 
                 <button
+                  type="button"
                   onClick={() => {
                     if (finalCanvas || croppedCanvas) setActiveStep('sheet');
                   }}
                   disabled={!croppedCanvas}
-                  className={`flex items-center gap-2 py-1.5 px-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2 py-1.5 px-3 rounded-lg font-medium transition-all whitespace-nowrap cursor-pointer ${
                     activeStep === 'sheet'
                       ? 'bg-indigo-950/70 text-indigo-300 border border-indigo-700/60 shadow-sm'
                       : croppedCanvas
@@ -279,13 +439,13 @@ export default function App() {
                   }`}
                 >
                   <span className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-mono">3</span>
-                  <span>3. Print Sheet</span>
+                  <span>3. A4 Print Sheet</span>
                 </button>
               </div>
 
-              <div className="text-xs text-zinc-400 font-mono hidden md:block">
-                <span>ICAO 9303 Standard</span>
-                <span className="mx-2 text-zinc-600">·</span>
+              <div className="text-xs text-zinc-400 font-mono hidden md:flex items-center gap-2">
+                <span>Default: A4 Paper</span>
+                <span className="text-zinc-600">·</span>
                 <span className="text-emerald-400">300 DPI Lossless</span>
               </div>
             </div>
@@ -315,7 +475,7 @@ export default function App() {
               />
             )}
 
-            {/* Step 3: Print Sheet Generator */}
+            {/* Step 3: Print Sheet Generator with Custom Copies & Default A4 */}
             {activeStep === 'sheet' && (
               <PrintSheetStep
                 finalPhotoCanvas={finalCanvas || croppedCanvas}
@@ -326,67 +486,68 @@ export default function App() {
           </>
         )}
 
-        {/* Dedicated Container / Slot for Future Google Ads */}
+        {/* Dedicated Container / Slot for Advertisements */}
         <div
           id="ad-space"
-          className="w-full my-6 min-h-[90px] bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl flex items-center justify-center text-zinc-500 text-xs text-center p-4 no-print transition-all"
+          className="w-full my-6 min-h-[90px] bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-zinc-500 text-xs text-center p-4 no-print transition-all"
         >
           <span className="font-mono text-[11px] text-zinc-400">
-            Advertisement Space · Google AdSense Responsive Banner Container
+            Advertisement Space · Google AdSense Responsive Display Banner
+          </span>
+          <span className="text-[10px] text-zinc-600 mt-0.5">
+            Clear placement reserved away from interactive editing controls.
           </span>
         </div>
       </main>
 
       {/* Footer */}
-      <footer id="app-footer" className="border-t border-zinc-900 bg-zinc-950 py-5 px-4 sm:px-6 text-xs text-zinc-400 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-7xl w-full mx-auto no-print">
-        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-center">
-          <span>© 2026 Passport Photo Studio</span>
-          <span>·</span>
-          <span className="font-mono text-zinc-300">pic.amitjoshi.info.np</span>
-          <span>·</span>
-          <span>Support: <a href="mailto:admin@amitjoshi.info.np" className="text-indigo-400 hover:underline">admin@amitjoshi.info.np</a></span>
-          <span>·</span>
-          <span>WhatsApp: <a href="https://wa.me/9779746241860" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">+977 9746241860</a></span>
+      <footer id="app-footer" className="border-t border-zinc-900 bg-zinc-950 py-6 px-4 sm:px-6 text-xs text-zinc-400 max-w-7xl w-full mx-auto no-print space-y-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 text-center">
+            <span className="font-semibold text-zinc-300">Passport Photo Studio</span>
+            <span>·</span>
+            <span className="font-mono text-zinc-400">pic.amitjoshi.info.np</span>
+            <span>·</span>
+            <span>Support: <a href="mailto:admin@amitjoshi.info.np" className="text-indigo-400 hover:underline">admin@amitjoshi.info.np</a></span>
+            <span>·</span>
+            <span>WhatsApp: <a href="https://wa.me/9779746241860" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">+977 9746241860</a></span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 text-zinc-400">
-          <button
-            onClick={() => setIsPrivacyOpen(true)}
-            className="hover:text-zinc-200 transition-colors"
-          >
-            Privacy Policy
-          </button>
-          <span>·</span>
-          <button
-            onClick={() => setIsTermsOpen(true)}
-            className="hover:text-zinc-200 transition-colors"
-          >
-            Terms & Conditions
-          </button>
-          <span>·</span>
-          <button
-            onClick={() => setIsBrandOpen(true)}
-            className="hover:text-cyan-300 text-cyan-400 font-medium transition-colors"
-          >
-            Brand Assets (SVG)
-          </button>
-          <span>·</span>
-          <button
-            onClick={() => setIsSupportOpen(true)}
-            className="hover:text-zinc-200 transition-colors text-indigo-400"
-          >
-            Support
-          </button>
+        <div className="flex flex-wrap items-center justify-center md:justify-between gap-3 pt-3 border-t border-zinc-900 text-[11px] text-zinc-500">
+          <div>
+            100% Client-Side Processing · No biometric data or images stored on servers.
+          </div>
+
+          <div className="flex items-center gap-4 text-zinc-400">
+            <button
+              type="button"
+              onClick={() => setIsPrivacyOpen(true)}
+              className="hover:text-zinc-200 transition-colors cursor-pointer"
+            >
+              Privacy Policy
+            </button>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={() => setIsTermsOpen(true)}
+              className="hover:text-zinc-200 transition-colors cursor-pointer"
+            >
+              Terms & Conditions
+            </button>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={() => setIsSupportOpen(true)}
+              className="hover:text-indigo-300 text-indigo-400 transition-colors cursor-pointer"
+            >
+              Support Help
+            </button>
+          </div>
         </div>
       </footer>
 
       {/* Modals */}
-      <BrandAssetModal
-        isOpen={isBrandOpen}
-        onClose={() => setIsBrandOpen(false)}
-        brandSheetUrl={brandConceptImg}
-      />
-
       <PrivacyPolicyModal
         isOpen={isPrivacyOpen}
         onClose={() => setIsPrivacyOpen(false)}

@@ -69,6 +69,9 @@ export const CropStep: React.FC<CropStepProps> = ({
       responsive: true,
       background: false,
       zoomable: true,
+      zoomOnWheel: false, // Disables mouse wheel zooming so page scrolling is never intercepted
+      zoomOnTouch: false, // Disables touch pinch zooming so mobile touch scrolling works normally
+      wheelZoomRatio: 0,
       rotatable: true,
       scalable: true,
       ready() {
@@ -217,7 +220,34 @@ export const CropStep: React.FC<CropStepProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Left 8 Cols: Interactive Viewport with Cropper.js and Biometric Guide */}
       <div className="lg:col-span-8 space-y-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-xl">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-xl space-y-3">
+          {/* Prominent Header with Immediate "Next: AI Retouch" button */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-zinc-800">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>1. Biometric Crop & Alignment</span>
+                <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/80 border border-indigo-800/60 px-2 py-0.5 rounded">
+                  {selectedPreset.name}
+                </span>
+              </h3>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                Align chin and crown within the oval guide. Wheel zoom is locked so scrolling never alters your crop.
+              </p>
+            </div>
+
+            {imageSrc && (
+              <button
+                type="button"
+                onClick={handleProceedToBackground}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-md shadow-indigo-600/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                title="Proceed to AI Background Removal and Retouching"
+              >
+                <span>Next: AI Retouch</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
           {/* Viewport Box */}
           <div
             onDragOver={(e) => e.preventDefault()}
@@ -368,8 +398,9 @@ export const CropStep: React.FC<CropStepProps> = ({
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => setShowBiometricGuide(!showBiometricGuide)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                     showBiometricGuide
                       ? 'bg-indigo-950/80 text-indigo-300 border border-indigo-700/60'
                       : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
@@ -380,10 +411,20 @@ export const CropStep: React.FC<CropStepProps> = ({
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium rounded-lg transition-colors"
+                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                 >
                   Change Photo
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleProceedToBackground}
+                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-sm shadow-indigo-600/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span>Next Step</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -504,6 +545,25 @@ export const CropStep: React.FC<CropStepProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Next Bar - Guarantees Immediate Visibility without Scrolling */}
+      {imageSrc && (
+        <div className="lg:hidden sticky bottom-3 z-30 p-3 bg-[#0B1020]/95 backdrop-blur-md border border-indigo-500/60 rounded-xl shadow-2xl flex items-center justify-between gap-3">
+          <div>
+            <span className="font-bold text-xs text-white block">{selectedPreset.name}</span>
+            <span className="text-[10px] text-zinc-400 font-mono">Biometric Alignment</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleProceedToBackground}
+            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-indigo-600/40 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>Next: AI Retouch</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

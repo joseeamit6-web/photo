@@ -1,0 +1,5 @@
+# robots.txt for Passport Photo Studio (pic.amitjoshi.info.np)
+User-agent: *
+Allow: /
+
+Sitemap: https://pic.amitjoshi.info.np/sitemap.xml
