@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
+import { BrandSymbol } from './BrandIdentity.tsx';
 import samplePortraitUrl from '../assets/images/passport_sample_portrait_1793111919167.jpg';
 
 interface HomeScreenProps {
@@ -94,7 +95,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onImageSelected }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-4 sm:py-8">
       {/* Hero Header */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-3">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0B1020] border border-cyan-800/60 text-cyan-300 text-xs font-medium shadow-sm">
+          <BrandSymbol size={18} />
+          <span>Photo Studio · Precision Biometric Lab</span>
+        </div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
           Create Official Passport & Visa Photos
         </h1>

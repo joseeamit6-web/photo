@@ -10,6 +10,8 @@ import { CropStep } from './components/CropStep.tsx';
 import { BackgroundStep } from './components/BackgroundStep.tsx';
 import { PrintSheetStep } from './components/PrintSheetStep.tsx';
 import { PrivacyPolicyModal, TermsConditionsModal, SupportModal } from './components/LegalModals.tsx';
+import { BrandLogoHorizontal, BrandAssetModal } from './components/BrandIdentity.tsx';
+import brandConceptImg from './assets/images/photo_studio_brand_identity_1793158006074.jpg';
 import { PASSPORT_PRESETS } from './constants/presets.ts';
 import { PassportPreset } from './types.ts';
 
@@ -19,6 +21,7 @@ interface HeaderProps {
   onSelectStep: (step: 'crop' | 'background' | 'sheet') => void;
   onNewPhoto: () => void;
   onOpenSupport: () => void;
+  onOpenBrand: () => void;
   onTriggerPrint: () => void;
 }
 
@@ -28,25 +31,20 @@ const Header: React.FC<HeaderProps> = ({
   onSelectStep,
   onNewPhoto,
   onOpenSupport,
+  onOpenBrand,
   onTriggerPrint,
 }) => {
   return (
-    <header id="app-header" className="border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40">
+    <header id="app-header" className="border-b border-zinc-800 bg-[#0B1020]/95 backdrop-blur-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Zone 1: Brand Wordmark */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-            <Camera className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-sm sm:text-base font-bold tracking-tight text-white whitespace-nowrap block">
-              Passport Photo Studio
-            </span>
-            <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 whitespace-nowrap block">
-              pic.amitjoshi.info.np · 300 DPI
-            </span>
-          </div>
-        </div>
+        {/* Zone 1: Brand Wordmark with precision geometric symbol */}
+        <button
+          onClick={onOpenBrand}
+          className="flex items-center gap-3 shrink-0 text-left hover:opacity-90 transition-opacity cursor-pointer group"
+          title="Click to view Photo Studio Brand Identity & Vector Assets"
+        >
+          <BrandLogoHorizontal size={32} />
+        </button>
 
         {/* Zone 2: Navigation Links (when image loaded) */}
         {hasImage ? (
@@ -128,10 +126,11 @@ export default function App() {
   const [croppedCanvas, setCroppedCanvas] = useState<HTMLCanvasElement | null>(null);
   const [finalCanvas, setFinalCanvas] = useState<HTMLCanvasElement | null>(null);
 
-  // Legal & Support Modals
+  // Legal & Support & Brand Modals
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const [isBrandOpen, setIsBrandOpen] = useState(false);
 
   // User selects an image on Homescreen
   const handleImageSelected = (src: string) => {
@@ -178,6 +177,7 @@ export default function App() {
           setFinalCanvas(null);
         }}
         onOpenSupport={() => setIsSupportOpen(true)}
+        onOpenBrand={() => setIsBrandOpen(true)}
         onTriggerPrint={handleTriggerPrint}
       />
 
@@ -365,6 +365,13 @@ export default function App() {
           </button>
           <span>·</span>
           <button
+            onClick={() => setIsBrandOpen(true)}
+            className="hover:text-cyan-300 text-cyan-400 font-medium transition-colors"
+          >
+            Brand Assets (SVG)
+          </button>
+          <span>·</span>
+          <button
             onClick={() => setIsSupportOpen(true)}
             className="hover:text-zinc-200 transition-colors text-indigo-400"
           >
@@ -374,6 +381,12 @@ export default function App() {
       </footer>
 
       {/* Modals */}
+      <BrandAssetModal
+        isOpen={isBrandOpen}
+        onClose={() => setIsBrandOpen(false)}
+        brandSheetUrl={brandConceptImg}
+      />
+
       <PrivacyPolicyModal
         isOpen={isPrivacyOpen}
         onClose={() => setIsPrivacyOpen(false)}
