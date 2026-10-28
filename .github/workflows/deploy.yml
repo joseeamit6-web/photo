@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -16,9 +16,6 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,24 +27,32 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci || npm install --legacy-peer-deps
-          else
-            npm install --legacy-peer-deps
-          fi
+        run: npm install --legacy-peer-deps
 
       - name: Build
         run: npm run build
 
+      # Method 1: Deploy to gh-pages branch (Works with standard default GitHub Pages setting: Deploy from a branch)
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+
+      # Method 2: Deploy to GitHub Actions Pages (Works if repository Settings > Pages is set to "GitHub Actions")
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v5
+        continue-on-error: true
 
       - name: Upload artifact
+        if: steps.pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'
+        continue-on-error: true
 
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - name: Deploy to GitHub Actions Pages
+        if: steps.pages.outcome == 'success'
         uses: actions/deploy-pages@v4
+        continue-on-error: true
