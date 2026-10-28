@@ -25,6 +25,7 @@ import { HomeScreen } from './components/HomeScreen.tsx';
 import { CropStep } from './components/CropStep.tsx';
 import { BackgroundStep } from './components/BackgroundStep.tsx';
 import { PrintSheetStep } from './components/PrintSheetStep.tsx';
+import { NepalClock } from './components/NepalClock.tsx';
 import { PrivacyPolicyModal, TermsConditionsModal, SupportModal } from './components/LegalModals.tsx';
 import { BrandLogoHorizontal } from './components/BrandIdentity.tsx';
 import { PASSPORT_PRESETS } from './constants/presets.ts';
@@ -136,10 +137,17 @@ const Header: React.FC<HeaderProps> = ({
             </nav>
           )}
 
+          <div className="hidden xl:flex items-center">
+            <NepalClock compact />
+          </div>
         </div>
 
-        {/* Zone 3: Primary Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Zone 3: Primary Actions & Mobile Hamburger */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Live Nepal Clock for Medium Screens */}
+          <div className="hidden md:block lg:hidden">
+            <NepalClock compact />
+          </div>
 
           {/* New Photo Action (when photo loaded) */}
           {hasImage && (
@@ -194,6 +202,9 @@ const Header: React.FC<HeaderProps> = ({
       {/* Accessible Mobile Dropdown Menu Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-zinc-800 bg-[#0B1020] px-4 py-3 space-y-3 no-print">
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-800 text-xs">
+            <NepalClock compact />
+          </div>
 
           <div className="flex flex-col gap-2 text-xs font-medium text-zinc-300">
             {hasImage ? (
@@ -511,6 +522,10 @@ export default function App() {
             <span>Support: <a href="mailto:admin@amitjoshi.info.np" className="text-indigo-400 hover:underline">admin@amitjoshi.info.np</a></span>
             <span>·</span>
             <span>WhatsApp: <a href="https://wa.me/9779746241860" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">+977 9746241860</a></span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <NepalClock compact />
           </div>
         </div>
 
