@@ -302,35 +302,53 @@ export default function App() {
   const [croppedCanvas, setCroppedCanvas] = useState<HTMLCanvasElement | null>(null);
   const [finalCanvas, setFinalCanvas] = useState<HTMLCanvasElement | null>(null);
 
-  // Theme Management (Defaults to dark, persisted in localStorage)
+  // Theme Management (Defaults to dark, safely persisted in localStorage)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('passport_studio_theme');
-      if (stored === 'light' || stored === 'dark') return stored;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = window.localStorage.getItem('passport_studio_theme');
+        if (stored === 'light' || stored === 'dark') return stored;
+      }
+    } catch {
+      // Sandboxed iframes may restrict localStorage access
     }
     return 'dark';
   });
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
+    try {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.body.style.backgroundColor = '#09090b';
+        document.body.style.color = '#f4f4f5';
+      } else {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+        document.body.style.backgroundColor = '#f8fafc';
+        document.body.style.color = '#0f172a';
+      }
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('passport_studio_theme', theme);
+      }
+    } catch {
+      // Sandboxed iframes safe
     }
-    localStorage.setItem('passport_studio_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Local Session Photo Counter (Private in-memory session count)
+  // Local Session Photo Counter (Private in-memory session count with safe fallback)
   const [sessionPhotosCount, setSessionPhotosCount] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('passport_session_photos');
-      return stored ? parseInt(stored, 10) : 0;
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const stored = window.sessionStorage.getItem('passport_session_photos');
+        return stored ? parseInt(stored, 10) : 0;
+      }
+    } catch {
+      // Sandboxed iframes safe
     }
     return 0;
   });
@@ -338,7 +356,13 @@ export default function App() {
   const incrementSessionCount = () => {
     setSessionPhotosCount((prev) => {
       const updated = prev + 1;
-      sessionStorage.setItem('passport_session_photos', updated.toString());
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.setItem('passport_session_photos', updated.toString());
+        }
+      } catch {
+        // Sandboxed iframes safe
+      }
       return updated;
     });
   };
